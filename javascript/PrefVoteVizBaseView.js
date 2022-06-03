@@ -5,9 +5,11 @@
  
  function PrefVoteVizBaseView ( data, options, $target ) {
 	this.data = data;
+	this.tick = 4;
  	for ( optionName in options ) {
 		switch(optionName) {
 			case 'imageDir':
+			case 'tick':
 				this[optionName] = options[optionName]; 
 				break;
 			default:
