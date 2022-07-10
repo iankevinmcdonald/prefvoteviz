@@ -34,37 +34,45 @@ Avoiding EMCAScript6 syntatic sugar for the sake of backwards compatibility
          }
      }
      
-     // Get data if needed
-     if ( source && !data ) {
-         data = this._loadData(source);
+     try {
+         // Get data if needed
+         if ( source && !data ) {
+             data = this._loadData(source);
+         }
+         this._setupData( data );
+         
+         let thisViewClass = window[ this.viewClass ];
+         console.log( thisViewClass );
+         this.view = new thisViewClass ( 
+             this._getData(), 
+             { 'imageDir' : this.imageDir },
+             this.$target
+         );
+          
+         this._setupHTML();
+
+         // Fill control HTML
+         $("#quota").text("Turnout: " + Number.prototype.toLocaleString(parseInt(this.constituency.turnout)) + " Quota: " + this.constituency.quota);
+         $("#seats-span").text(this.constituency.seats);
+
+         /* Failure should include:
+            //if we didn't load a constituency var then we have no data yet
+            $("#quota,.quota").text("There are no data up for this contest at present.");
+            $("#stageNumbers").html("");
+        */
+
+         // And then setup targets
+        this._setupHandlers();
+         
+         this.view.show();
+         this.status = 'success';
+     } catch ( err ) {
+         if ( 'message' in err ) {
+            $target.text( 'Error: ' + err.message ) ;
+         }
+         this.status = 'error';
+         this.error = err;
      }
-     this._setupData( data );
-     
-     let thisViewClass = window[ this.viewClass ];
-     console.log( thisViewClass );
-     this.view = new thisViewClass ( 
-         this._getData(), 
-         { 'imageDir' : this.imageDir },
-         this.$target
-     );
-      
-     this._setupHTML();
-
-     // Fill control HTML
-     $("#quota").text("Turnout: " + Number.prototype.toLocaleString(parseInt(this.constituency.turnout)) + " Quota: " + this.constituency.quota);
-     $("#seats-span").text(this.constituency.seats);
-
-     /* Failure should include:
-        //if we didn't load a constituency var then we have no data yet
-        $("#quota,.quota").text("There are no data up for this contest at present.");
-        $("#stageNumbers").html("");
-    */
-
-     // And then setup targets
-    this._setupHandlers();
-     
-     this.view.show();
-     
 }
  
 PrefVoteVizControl.prototype._loadData = function(sourceURL) {
@@ -87,16 +95,26 @@ PrefVoteVizControl.prototype._loadData = function(sourceURL) {
                 'success': function (data) {
                     json = data;
                 },
+                'fail' : function (e) {
+                	console.log('failed log', e);
+                	json = { 
+            	'status' : 'error', 'message' : 'Ajax failed. Web response ' + e.status, 'data' : e
+    				};
+    			}
 
-            })
-            .fail(function(e){console.log('failed log', e)});
+            });
             return json;
      })();
      
-     if ( data.status == 'success' ) {
+     if ( data == false || data == null ) {
+		throw { 'status': 'error', 'message' : 'No data returned' };
+     } else if ( data.status == 'success' ) {
          return data.data;
-     } else {
-         return false;
+     } else if ( 'message' in 'data' ) {
+	     throw data ;
+	 } else {
+	     	data.message = 'No message returned';
+	     	throw data;
      }
 }
 
