@@ -67,6 +67,7 @@ PrefVoteVizDoughnut.prototype._setup = function() {
 			padAngle: 0,
 			startAngle: thisStartAngle,
 			endAngle: thisStartAngle + this.quotaAngle,
+			xSign: thisStartAngle + this.quotaAngle/2 < Math.PI ? 1 : -1,
 		}
 	}
 
@@ -334,8 +335,8 @@ PrefVoteVizDoughnut.prototype._initCountDict = function () {
 						this.candidateArcs[countNumber][i].endAngle = this.candidateArcs[countNumber][i].endAngle + angleChange;
 					}
 				}
-				let newWinner = Object.assign({}, this.winnerBoxes[seatIndex] );
-				newWinner = Object.assign( newWinner, thisNewlyElectedArc );
+				let newWinner = Object.assign({}, thisNewlyElectedArc );
+				newWinner = Object.assign( newWinner, this.winnerBoxes[seatIndex] );
 				newWinner.seatIndex = seatIndex;
 				reservedSeats[seatIndex] = newWinner;
 			}
@@ -372,12 +373,13 @@ PrefVoteVizDoughnut.prototype.getNewlyElectedRisingArcs = function ( countNumber
 			thisNewlyElectedArc.angle = this.quotaAngle;
 			thisNewlyElectedArc.endAngle = thisNewlyElectedArc.startAngle + this.quotaAngle;
 			thisNewlyElectedArc.xSign = ( (thisNewlyElectedArc.startAngle+thisNewlyElectedArc.endAngle) < 2*Math.PI ) ? 1: -1,
+			thisNewlyElectedArc.total = this.data.countDict[ countNumber -1 ][ thisNewlyElectedArc.candidateId ].total ;
 			newlyElectedArcs.push(  thisNewlyElectedArc );
 		}
 	}
 	
-	// Add the seat index from the elected arcs.
-	
+	// Rearrange so that in the final round the first gets animated first.
+	newlyElectedArcs.sort( (a,b) => parseFloat(b.total) - parseFloat(a.total) );
 	
 	return newlyElectedArcs;
 }
@@ -415,6 +417,7 @@ PrefVoteVizDoughnut.prototype._labelYPos = function( datum ) {
 }
 	
 PrefVoteVizDoughnut.prototype._labelPos = function( datum ) {
+
 	let labelPos = [ this.radius * datum.xSign, this._labelYPos( datum )];
 	//Special rule for candidate elected to the 6 o'clock winner slot.
 	if ( datum.status == 'elected' && datum.seatIndex == (this.winnerBoxes.length-1) / 2 ) {
@@ -559,7 +562,7 @@ PrefVoteVizDoughnut.prototype.updateCandidateText = function( thisCandidate, thi
 	}
 }
 	
-PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
+PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 	// Excluded candidates have been moved out
 
 		// If elected, then we need to split the arc and move it out.
@@ -567,18 +570,20 @@ PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
 		// Create new arc(s) to be winner & rise
 		// Reduce old one
 		// Animated winning arc
+		
+	console.log('animateTransfer(' + countNumber + ')' );
 
 	const that = this;
-	
-	let cumulativeDelay =0;
+	let needToShowStepAtEnd = false; //Happens if an arc appears in mid-animation
+	let cumulativeDelay =0; 
 
-	// If someone's elected, we need to split elected away from the transfer.
+	// If someone's elected, we need to split elected away from the transfer. Nicely separated.
 	let newlyElectedArcs = this.getNewlyElectedRisingArcs( countNumber );
 	let newlyElectedCandidateIds = newlyElectedArcs.map( function(d) { return d.candidateId.toString() ; } );
 	
 	if ( newlyElectedArcs.length ) {
 		const $newlyElectedArcRiseTransition = this._animateElection( newlyElectedArcs );
-		cumulativeDelay = cumulativeDelay + $newlyElectedArcRiseTransition.duration();
+		await $newlyElectedArcRiseTransition.end();
 	}
 
 	var transfererID = null;
@@ -595,12 +600,12 @@ PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
 			}
 		// Otherwise, check it's not a newly elected candidate *without* transfers'
 		} else if ( newlyElectedCandidateIds.includes( c.toString() ) ) {
-			// In which case, remove the residual
+			// In which case, remove the residual - faded out in ticks 0-75.
 			this.svg
 				.selectAll('#donutAnimation path.count.candidate_' + c )
 				.classed('fading', true)
 				.transition()
-				.delay( cumulativeDelay )
+				.delay( cumulativeDelay ) //should be zero, unless I've added something since writing this comment
 				.duration( 75 * this.tick)
 				.style('opacity', 0 )
 				.remove()
@@ -608,14 +613,14 @@ PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
 		}
 	}
 	
-	// Placeholder for adding a message
+	// Placeholder for adding a message (possibly to handle an unusual retransfer with, say, Meek STV)
 	if ( aTransfererInRace.length == 0 && aTransfererElected.length > 0 ) {
 		// Needs a message...
 		this.svg.append('text')
 			.text('Message will go here for count ' + countNumber )
 			.attr('class', 'message')
 			.transition()
-			.delay(cumulativeDelay + 75 * this.tick )
+			.delay(cumulativeDelay + 75 * this.tick ) // cumulativeDelay should be zero unless changed since this comment
 			.duration(75 * this.tick).style('opacity' ,0)
 			.remove()
 		;
@@ -632,17 +637,20 @@ PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
 			.classed('transferer', true)
 	;
 	
-	// Transfer proper
-	// Firstly the vote share for the transferer moves to the transfer ring.
+	// If you're trying to do a transfer without a transferer, something has gone wrong.
 	if ( !$transferArc || !$transferArc.size() ) {
 		debugger;
 	}
 	
+	// Transfer proper
+	// Firstly the vote share for the transferer moves to the transfer ring.
+
+	// Move old vote into the transfer ring - ticks 0-150 - and fade out.
 	let $transferFromTransition = $transferArc	
 		.classed('count', false)
 		.classed('fading', true) //So we can delete it if the animation is interrupted
 		.transition()
-		.delay( cumulativeDelay )
+		.delay( cumulativeDelay ) // Should be 0 unless changed since this comment
 		.duration(  150 * this.tick  )
 		.attrTween("d", this._voteStatusTweenFac( 'transfer' ) )
 		.transition().duration(75 * this.tick).style('opacity' ,0)
@@ -659,7 +667,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
 	
 	for (let ordinal=0;ordinal<this.candidateOrder.length; ordinal++) {
 		let t = this.candidateOrder[ ordinal ];
-		// Find the transferees - any other candidate still standing could be one.
+		// Find the transferees - any other candidate still standing could be one. (What about first-round-transferees?)
 		if ( this.data.countDict[countNumber][ this.data.candidates[t].id ]['transfers'] == false && ( that._withCandidateId( that.candidateArcs[ countNumber ], this.data.candidates[t].id ) !== undefined ) ) {
 			
 			let voteAngle = this.rFactor * this.data.transferDict[countNumber][ this.data.candidates[t].id ];
@@ -679,6 +687,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
 		}
 	}
 	
+	// data/enter/append will create the transfer arcs as needed (but they begin invisible)
 	this.svg
 		.selectAll('path.transfer')
 		.data(aTransferToArcs)
@@ -687,7 +696,6 @@ PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
 		.attr('d', this.ARCS.transfer )
 		.style('opacity',0)
 		.attr('class', function(d) { return 'transfer ' + d.candidateParty + ' ' + d.candidateClass ; } )
-		.on('end', function() { this.classList.remove('count') ;} )
 	;
 	
 	let $splitTransition = d3.selectAll('path.transfer')
@@ -696,7 +704,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
 		.delay ( cumulativeDelay ) 
 		.duration(150*this.tick).style('opacity', 1)
 		// Move them to the right point in the circle
-		.transition()
+		.transition() // starts at end of the fade in
 		.duration(150*this.tick)
 		.attrTween("d",
 			function(datum) {
@@ -711,146 +719,187 @@ PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
 				}
 			}
 		)
-		// Move them to the count circle
+		// Pause & move them to the count circle
 		.transition()
 		.duration(150*this.tick)
 		.attrTween("d", 
 			this._voteStatusTweenFac('count') )
-		// Then delete, after a delay for safety
-		.delay(150*this.tick)
-		.remove()
 	;
 	
+	let splitTransitionPromise = $splitTransition.end();
 	
+		// Usually, they are folded into the existing arc - but sometimes, with a first-round transfer, they can be this 
+		// candidate's first votes, and hence a whole new arc.
+		// Rather than branch this chain, let's reclass first ... 
 	
-	cumulativeDelay += $splitTransition.duration();
-	// Main circle transitions towards the next round *with*
+	// $splitTransition.duration() is not cumulative, it's just the duration of single transition returned ie 150 ticks.
+	// This means that the count arcs rotate at the same time as the transfer arcs
+	cumulativeDelay += 150*this.tick;
+	//cumulativeDelay = 0;
+	// The count circle transitions towards the next round *with*
 	// - next round's start angle
-	// - this round's angle
+	// - this round's angle - (Q - does this include transfer val)?
 	// - an appropriate tween
 	
 
-
-	let $rotateCountTransition = d3.selectAll('path.count')
-		.transition()
-		.delay ( cumulativeDelay )
-		.duration( 150*this.tick)
-		.attrTween("d", 
-			function(datum) {
-				let candidateId = datum.candidateId;
-				let thisCandidateArc = that._withCandidateId( that.candidateArcs[ countNumber ], candidateId );
-				if ( thisCandidateArc == undefined ) {
-					// _withCandidateId is a filter, and can legitimately return nothing
-					return null;
-				}
-				let newStartAngle = thisCandidateArc.startAngle;
-				return that._voteStartAngleTweenFac( datum, newStartAngle );
-			}
-		)
-	;
+	// Time is again the problem.
 	
-	$rotateCountTransition
-		.selection()
-		.data( this._getCandidateArcs( countNumber, true ), function(d) { return d.candidateId ; } )
-	;
+	// If the transfer from someone winning puts someone else over the threshold, then they don't turn up in 'path.count'.
+	// All of these need to be able to add. Because async, we might not be able to reply to DOM changes
 	
-	// Rotate the lines
-	this.svg
-		.selectAll('polyline.count')
-		.transition()
-		.delay( cumulativeDelay )
-		.duration( 150*this.tick )
-		.attrTween('points',
-			function(datum) {
-				let candidateId = datum.candidateId;
-				let thisCandidateArc = that._withCandidateId( that.candidateArcs[ countNumber ], candidateId );
-				// newly eliminated candidate
-				if ( thisCandidateArc === undefined ) {
-					return null;
-				} else {					
+	let $pathCount = d3.selectAll('path.count');
+	if ( ! $pathCount.empty() ) { // is empty
+		//cumulativeDelay = 0;
+		let $rotateCountTransition = $pathCount
+			.transition()
+			.delay ( cumulativeDelay )
+			.duration( 150*this.tick)
+			.attrTween("d", 
+				function(datum) {
+					let candidateId = datum.candidateId;
+					let thisCandidateArc = that._withCandidateId( that.candidateArcs[ countNumber ], candidateId );
+					if ( thisCandidateArc == undefined ) {
+						// _withCandidateId is a filter, and can legitimately return nothing
+						return null;
+					}
 					let newStartAngle = thisCandidateArc.startAngle;
-					let newEndAngle = thisCandidateArc.endAngle;
-					return that._labelLinePointsTweenFac( datum, newStartAngle, newEndAngle );
+					return that._voteStartAngleTweenFac( datum, newStartAngle );
 				}
-			}
-		)
-	;
+			)
+		;
+		
+		$rotateCountTransition
+			.selection()
+			.data( this._getCandidateArcs( countNumber, true ), function(d) { return d.candidateId ; } )
+		;
+		
+		// Rotate the lines
+		this.svg
+			.selectAll('polyline.count')
+			.transition()
+			.delay( cumulativeDelay )
+			.duration( 150*this.tick )
+			.attrTween('points',
+				function(datum) {
+					let candidateId = datum.candidateId;
+					let thisCandidateArc = that._withCandidateId( that.candidateArcs[ countNumber ], candidateId );
+					// newly eliminated candidate
+					if ( thisCandidateArc === undefined ) {
+						return null;
+					} else {					
+						let newStartAngle = thisCandidateArc.startAngle;
+						let newEndAngle = thisCandidateArc.endAngle;
+						return that._labelLinePointsTweenFac( datum, newStartAngle, newEndAngle );
+					}
+				}
+			)
+		;
+		
+		// Move the label and image 
+		
+		let $rotateLabel = d3.selectAll('text.count')
+			.transition()
+			.delay( cumulativeDelay )
+			.duration( 150*this.tick )
+			.attrTween('transform', 
+				function(datum) {
+					let candidateId = datum.candidateId;
+					let thisCandidateArc = that._withCandidateId( that.candidateArcs[ countNumber ], candidateId );
+					// The text could have been deleted between defining and running this transformation, in which case...
+					if ( thisCandidateArc === undefined ) {
+						return null;
+					} else {
+						let newStartAngle =thisCandidateArc.startAngle;
+						let newEndAngle = thisCandidateArc.endAngle;
+						return that._labelPosAngleTweenFac( datum, newStartAngle, newEndAngle );
+					}
+				}
+			)
+		;
 	
-	// Move the label and image 
+		d3.selectAll('image.count')
+			.transition()
+			.delay( cumulativeDelay )
+			.duration( 150*this.tick )
+			.attrTween('transform',
+				function (datum) {
+					let candidateId = datum.candidateId;
+					let thisCandidateArc = that._withCandidateId( that.candidateArcs[ countNumber ], candidateId );
+					if ( !datum.slug || thisCandidateArc === undefined ) {
+						return null;
+					} else {
+						let newStartAngle =thisCandidateArc.startAngle;
+						let newEndAngle = thisCandidateArc.endAngle;
+						return that._angleTweenFac( datum, newStartAngle, newEndAngle, '_labelImagePos' );
+					}
+				}
+			)
 	
-	let $rotateLabel = d3.selectAll('text.count')
-		.transition()
-		.delay( cumulativeDelay )
-		.duration( 150*this.tick )
-		.attrTween('transform', 
-			function(datum) {
+		await $rotateCountTransition.end();
+		console.log('$rotateCountTransition ended');
+		
+	} 
+	
+	await splitTransitionPromise;
+	console.log('$splitTransition ended');
+
+	$splitTransition.selection()
+		.attr('class',function(d) { console.log('Adding count to attribute'); return 'count ' + d.candidateParty + ' ' + d.candidateClass ; } )
+		.filter( 
+			function( datum, index, nodes ) {
 				let candidateId = datum.candidateId;
-				let thisCandidateArc = that._withCandidateId( that.candidateArcs[ countNumber ], candidateId );
-				// The text could have been deleted between defining and running this transformation, in which case...
-				if ( thisCandidateArc === undefined ) {
-					return null;
+				if ( countNumber > 0 && that.data.countDict[countNumber-1][candidateId].isShown ) {
+					console.log('removing transfer arc',datum);
+					return true; // remove redundant arc.
 				} else {
-					let newStartAngle =thisCandidateArc.startAngle;
-					let newEndAngle = thisCandidateArc.endAngle;
-					return that._labelPosAngleTweenFac( datum, newStartAngle, newEndAngle );
+					// In this scenario we will now need to assign a label.
+					console.log('keeping transfer arc',datum);
+					needToShowStepAtEnd = true;
+					return false;
 				}
 			}
 		)
+		.remove() 
 	;
 
-	d3.selectAll('image.count')
-		.transition()
-		.delay( cumulativeDelay )
-		.duration( 150*this.tick )
-		.attrTween('transform',
-			function (datum) {
-				let candidateId = datum.candidateId;
-				let thisCandidateArc = that._withCandidateId( that.candidateArcs[ countNumber ], candidateId );
-				if ( !datum.slug || thisCandidateArc === undefined ) {
-					return null;
-				} else {
-					let newStartAngle =thisCandidateArc.startAngle;
-					let newEndAngle = thisCandidateArc.endAngle;
-					return that._angleTweenFac( datum, newStartAngle, newEndAngle, '_labelImagePos' );
-				}
-			}
-		)
-
-	cumulativeDelay += $rotateCountTransition.duration();
-
-	// Get the promise for when it ends
-	$splitTransition.end().then( function() {
+	
 			// Set the datum
-			that.svg.selectAll('path.count')
-				.data( that._getCandidateArcs( countNumber ), function(d) { return d.candidateId; })
-				.attr('d', that.ARCS.count )
-			;
-		}
-	);
+	that.svg.selectAll('path.count')
+		.data( that._getCandidateArcs( countNumber ), function(d) { return d.candidateId; })
+		.attr('d', that.ARCS.count )
+	;
 	
+	console.log( 'needToShowStepAtEnd',needToShowStepAtEnd, 'countNumber',countNumber);
 	// In the final round, everything elese that's not elected needs to be moved up
 	if ( !( countNumber +1 in this.data.countDict ) ) {
+		console.log ('Inferring final round, countNumber=', countNumber );
 		// If someone's elected, we need to split elected away from the transfer.
 		let finallyElectedArcs = this.getNewlyElectedRisingArcs( countNumber+1 );
 		
+		// There could also be two stags to this: the ones already in situ
+		// (possibly after transfers) and the "last candidates standing"
+		// who only met quota because the quota is shrining with each round,
+		// and that's not a factor we're trying to show.
+		
+		// We actually have two problems here.
 		if ( finallyElectedArcs.length ) {
-			let splitAndMoveTransitionPromise = $splitTransition.end();
+			that._animateElection( finallyElectedArcs );
+			await that.svg.selectAll('path.count,polyline.count,text.count,image.count')
+				.classed('fading', true)
+				.transition()
+				.duration(that.tick * 150)
+				.style('opacity',0)
+				.remove()
 			
-			splitAndMoveTransitionPromise.then( function() {
-				that._animateElection( finallyElectedArcs );
-				that.svg.selectAll('path.count,polyline.count,text.count,image.count')
-					.classed('fading', true)
-					.transition()
-					.duration(that.tick * 150)
-					.style('opacity',0)
-					.remove()
-				
-			});
 		}
 		
+	} else if ( needToShowStepAtEnd ) {
+		console.log('About to show next step ..');
+		this.showStep( countNumber );
 	}
 	
 	
+	return ;
 	
 	// startAngle & sendAngle are still in the datum ; but we do need a new arc.
 	
@@ -859,6 +908,10 @@ PrefVoteVizDoughnut.prototype.animateTransfer = function( countNumber ) {
 	// rotates (or is this just a transform?)
 	
 }
+	
+/* When multiple arcs are passed, we need to raise them in a particular order:	
+ 	- decreasing order of vote share
+ 	- then any remainder (we don't bother recalculating transfers for final candidates) */
 	
 PrefVoteVizDoughnut.prototype._animateElection = function( newlyElectedArcs ) {
 	const that = this;

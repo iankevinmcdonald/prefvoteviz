@@ -42,7 +42,6 @@ Avoiding EMCAScript6 syntatic sugar for the sake of backwards compatibility
          this._setupData( data );
          
          let thisViewClass = window[ this.viewClass ];
-         console.log( thisViewClass );
          this.view = new thisViewClass ( 
              this._getData(), 
              { 'imageDir' : this.imageDir },
@@ -67,6 +66,7 @@ Avoiding EMCAScript6 syntatic sugar for the sake of backwards compatibility
          this.view.show();
          this.status = 'success';
      } catch ( err ) {
+  		 console.log(err);
          if ( 'message' in err ) {
             $target.text( 'Error: ' + err.message ) ;
          }
