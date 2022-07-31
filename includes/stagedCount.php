@@ -43,15 +43,19 @@ class StagedCount {
                 $source = $putativeSource;
             // Try CSV
             } else {
-                $source = array_map( 'str_getcsv', explode("\n", $fileIn) );
+                $source = array_map( 'str_getcsv', explode("\n", $source) );
             }
         }
         
         switch( $format ) {
 
             case self::OPAVOTE:
-                $this->__fromOpaVote($source);
-                break;
+                if (isset($source->precision)) {
+                    $this->__fromOpaVote($source);
+                    break;
+                } else {
+                    throw new Exception ( 'Invalid results returned from OpaVote');
+                }
             case self::TRANSFERTABLE:
                 $this->__fromCSV($source);
                 break;
@@ -219,30 +223,61 @@ class StagedCount {
         $this->seats = $obj->n_seats ;
         $this->turnout = $obj->n_valid_votes;
         // OpaVote can recalculate the threshold each round
-        $this->counts = count($obj->rounds);
-        $this->quota = sprintf("%0.2f",  $obj->rounds[ $this->counts - 1]->thresh / $units );
-        for( $i = 0 ; $i < count($obj->candidates); $i++ ) {
+        
+        // OpaVote also includes candidates with zero votes - firstly all qualifying candidates are elected, then
+        // candidates with no votes are eliminated. We need to skip any such candidates and rounds. 
+        // This means we're going to need a candidate mapping.
+        
+        //$this->counts = count($obj->rounds);
+        $this->quota = sprintf("%0.2f",  $obj->rounds[ count($obj->rounds) - 1]->thresh / $units );
+        $cToOut = [];
+        $cOut = 0;
+        for( $c = 0 ; $c < count($obj->candidates); $c++ ) {
             // No continuous candidate refs (feature later?)
             /*
              $id = preg_replace( '/\s+/', '', $obj->candidates[$i] );
              $id = strtolower($id); */
-            $this->candidatesDict[ strval($i) ] = [
-                'id' => strval($i),
-                'name' => $obj->candidates[ strval($i) ],
-                'status' => '',
-                //                    'party' => 'None'
-            ];
+            $cS = strval($c);
+            $hasVotes = count(
+                array_filter( 
+                    array_map( 
+                        function($round) use ($cS) { return $round->count[ $cS ] > 0; },
+                        $obj->rounds
+                    )
+                )
+            );
+            if ( $hasVotes ) {
+                $this->candidatesDict[ strval($cOut) ] = [
+                    'id' => strval($cOut),
+                    'name' => $obj->candidates[ strval($c) ],
+                    'status' => '',
+                    //                    'party' => 'None'
+                ];
+                $cToOut[ $c]= $cOut;
+                $cOut++;
+            }
         }
-        
         
         /* A stages round includes transfers (see flag), exclusion, and election */
         /* An OpaVote round show the delta, and shows the result of each Exclusion/Election - but doesn't actually feature it in the data */
         $aCurrentCandidateStatus = array_column( $this->candidatesDict, 'status' ); //Will just create a row of empty strings, but felt better doing it this way
         
-        for( $i = 0; $i < count($obj->rounds); $i++ ) {
-            $thisCount = array_map ( function($numVotes) use ($units) { return [ 'total' => sprintf("%0.1f", $numVotes/$units), 'status' => '', 'order' => 0, 'transfers' => false ] ;  } , $obj->rounds[$i]->count );
+        $rOut = 0;
+        for( $r = 0; $r < count($obj->rounds); $r++ ) {
+            $thisCount = 
+                array_filter(
+                    array_map ( 
+                        function($numVotes) use ($units) { return [ 'total' => sprintf("%0.1f", $numVotes/$units), 'status' => '', 'order' => 0, 'transfers' => false ] ;  } 
+                        , $obj->rounds[$r]->count 
+                    ),
+                    function($cIn) use ($cToOut) { return array_key_exists( $cIn, $cToOut ); }, //filter out the ones we don't want
+                    ARRAY_FILTER_USE_KEY
+                )
+            ;
+            // Reindex using the output candidate ids
+            $thisCount = array_values($thisCount);
             
-            switch( $obj->rounds[$i]->action->type ) {
+            switch( $obj->rounds[$r]->action->type ) {
                 case 'first':
                     $thisTransfer = array_pad( [] , count($this->candidatesDict), 0);
                     break;
@@ -250,16 +285,21 @@ class StagedCount {
                     /*
                      // This is for a display, and we do not explicitly display rounds where surplus is transferred from already elected thanks to a
                      // decreasing quota when votes exhaust.
-                     if ( $aCurrentCandidateStatus[ $obj->rounds[$i]->action->candidates[0] ] === 'Elected' && $i>1 ) {
-                     error_log( "Skipping $i, n=" . $obj->rounds[$i]->n . " ...\n");
+                     if ( $aCurrentCandidateStatus[ $obj->rounds[$r]->action->candidates[0] ] === 'Elected' && $r>1 ) {
+                     error_log( "Skipping $r, n=" . $obj->rounds[$r]->n . " ...\n");
                      continue 2;
                      }*/
                     
                 case 'eliminate':
-                    foreach( $obj->rounds[$i]->action->candidates as $who ) {
-                        //                            $aCurrentCandidateStatus[ $who ] = $obj->rounds[$i]->action->type === 'surplus' ? 'Elected' : 'Excluded';
-                        //$thisCount[ $who ]['status'] = $aCurrentCandidateStatus[ $who ];
-                        $thisCount[ $who ]['transfers'] = true;
+                    $roundIsShown = false;
+                    foreach( $obj->rounds[$r]->action->candidates as $who ) {
+                        if ( isset($cToOut[$who] )) {
+                            $thisCount[$cToOut[$who]]['transfers'] = true;
+                            $roundIsShown = true;
+                        }
+                    }
+                    if ( !$roundIsShown ) {
+                        continue 2; // "switch" a syntatic loop; this continues the for loop.
                     }
                     // Put the transfers to each candidate in $this->transferDict ;
                     for( $j = 0; $j < count($this->candidatesDict); $j++) {
@@ -276,12 +316,14 @@ class StagedCount {
             // threshold decreasing due to later vote exhaustion.
             
             // You can get winners in round 1
-            foreach( $obj->rounds[$i]->winners as $winner ) {
-                $aCurrentCandidateStatus[$winner] = 'Elected';
+            foreach( $obj->rounds[$r]->winners as $winner ) {
+                $aCurrentCandidateStatus[$cToOut[$winner] ] = 'Elected';
             }
             
-            foreach( $obj->rounds[$i]->losers as $loser ) {
-                $aCurrentCandidateStatus[$loser] = 'Excluded';
+            foreach( $obj->rounds[$r]->losers as $loser ) {
+                if ( isset($cToOut[$loser]) ) {
+                    $aCurrentCandidateStatus[$cToOut[$loser]] = 'Excluded';
+                }
             }
             
             
@@ -291,10 +333,11 @@ class StagedCount {
             
             
             $this->countDict[] = $thisCount;
-            $this->countMsg[] = $obj->rounds[$i]->msg . '(' . $obj->method . ')';
+            $this->countMsg[] = $obj->rounds[$r]->msg . '(' . $obj->method . ')';
             $this->transferDict[] = $thisTransfer;
-            
+            $rOut++; // now set to next round
         }
+        $this->counts = $rOut;
     }
     
     public function populateBlankParties() {
