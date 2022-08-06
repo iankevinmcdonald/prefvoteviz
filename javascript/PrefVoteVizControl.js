@@ -64,6 +64,9 @@ Avoiding EMCAScript6 syntatic sugar for the sake of backwards compatibility
         this._setupHandlers();
          
          this.view.show();
+         if ( this.running ) {
+	         this.$target.find(".pause-replay").click();
+	     }
          this.status = 'success';
      } catch ( err ) {
   		 console.log(err);
@@ -256,7 +259,7 @@ PrefVoteVizControl.prototype._setupHTML = function () {
  */
     if ( !('$controls' in this) ) {
         if ( this.$target.find('.controls').length == 0 ) {
-            this.$target.append('<div id="controls"><a class="again fa fa-step-backward"></a><a class="pause-replay fa fa-play"></a><a class="step fa fa-step-forward"></a></div>'
+            this.$target.append('<div id="controls" class="controls"><a class="again fa fa-step-backward"></a><a class="pause-replay fa fa-play"></a><a class="step fa fa-step-forward"></a></div>'
             );
         }
         this.$controls = this.$target.find('.controls');
@@ -292,31 +295,40 @@ PrefVoteVizControl.prototype._setupHTML = function () {
 }
 
 PrefVoteVizControl.prototype._setStageNumber1 = function() {
-    $(".stageNumber").removeClass("active completed").first().addClass('active');
+    this.$target.find(".stageNumber").removeClass("active completed").first().addClass('completed');
+    this.$target.find(".controls").addClass("at-start");
 }
-PrefVoteVizControl.prototype._updateCounter = function() {
 
+PrefVoteVizControl.prototype._updateCounter = function() {
 	// We don't know whether the current step is active, but we know the others are not.
-    $(".stageNumber").slice( this.countNumber+1 ).removeClass("completed");
+    this.$target.find(".stageNumber").slice( this.countNumber+1 ).removeClass("completed");
 	//$(".stageNumber").slice( this.countNumber ).removeClass("active");
-    $(".stageNumber").slice( 0, this.countNumber+1 ).addClass('completed');
-    if ( this.countNumber >= this.counts - 1 ) {
-    	$('#controls a.pause-replay').removeClass('fa-pause fa-play').addClass('fa-repeat');
-    } 
-    	
-};
+    this.$target.find(".stageNumber").slice( 0, this.countNumber+1 ).addClass('completed');
+    if ( this.countNumber == 0 ) {
+    	this.$target.find('.controls').removeClass('at-end').addClass('at-start');
+    } else if ( this.countNumber >= this.counts - 1 ) {
+    	this.$target.find('.controls a.pause-replay').removeClass('fa-pause fa-play').addClass('fa-repeat');
+    	this.$target.find('.controls').removeClass('at-start').addClass('at-end');
+    } else {
+    	this.$target.find('.controls').removeClass('at-start at-end');
+    }
+}
 
 PrefVoteVizControl.prototype._setActiveMarker = function () {
 	// It's always the *next* stage that's being animated
 	let that = this;
 	$nextStepMarker = $(".stageNumber").removeClass("active").eq(this.countNumber +1);
     $nextStepMarker.addClass('active');
-    // Assume that the animation will last 1000 ticks
+    // As soon as a step is active, you're not at the start and can go backwards
+    // (Partially because the first step is never active.)
+    this.$target.find('.controls').removeClass('at-start');
+    // Make it flash or otherwise appear active for 1000 ticks
     const thisTimeout = window.setTimeout( function() { 
     	$nextStepMarker.removeClass("active").addClass("completed");
+    	/* Not using this any more
     	if ( that.countNumber >= that.counts -1 ) {
     		$('#controls a.pause-replay').removeClass('fa-pause fa-play').addClass('fa-repeat');
-    	}
+    	}*/
     }, this.view.tick * 1000 );
     this.animationTimeoutIDs.push( thisTimeout );
 }
@@ -349,7 +361,7 @@ PrefVoteVizControl.prototype._setupHandlers = function () {
 
     this.$target.find(".step").click(function(event) {
         event.preventDefault();
-        that.step();
+        that.step(); //step forward
     });
 
     this.$target.find(".again").click(function(event) {
@@ -373,13 +385,12 @@ PrefVoteVizControl.prototype._setupHandlers = function () {
 // firstCount folded into construction & _setStageNumber1
 
 PrefVoteVizControl.prototype._advanceCount = function() {
-	// Have we got to the end?
-	console.log( 'Calling advanceCount countNumber=' + this.countNumber );
-	if ( this.countNumber+1 < this.countDict.length ) {
+	// Do we have a step to which to advance?
+	if ( this.countNumber+1  in this.countDict ) {
 		const transfers = this.transferDict[this.countNumber];
 		//update the counters
-		this._setActiveMarker();
 		this._updateCounter();
+		this._setActiveMarker();
 		this.view.animateTransfer( this.countNumber +1); //Transfer to next stage?
 		this.countNumber ++; //wise when ending?
 	} else {
@@ -434,9 +445,12 @@ PrefVoteVizControl.prototype._startLoop = function() {
 
 // autoplay only: stop
 PrefVoteVizControl.prototype._pause = function() {
+	let isAtEnd = this.countNumber >= this.countDict.length-1;
+	let icon = isAtEnd?'fa-repeat':'fa-play';
     this.$target.find('.pause-replay')
     	.removeClass("fa-pause")
-        .addClass("fa-play");
+        .addClass(icon);
+	this.$target.find('.controls').toggleClass('at-end', isAtEnd );
 
     window.clearInterval( this.loopID );
     this.loopID = false;
@@ -481,7 +495,6 @@ PrefVoteVizControl.prototype.jumpToStep = function(stepIndex) {
 PrefVoteVizControl.prototype.step = function() {
     this._pause();
     this._playStep();
-    console.log('step');
 }
 
 // go backwards; restat loop if exists
@@ -500,6 +513,8 @@ PrefVoteVizControl.prototype.again = function() {
     if ($pauseReplay.hasClass("fa-repeat")) {
         $pauseReplay.addClass("fa-play");
     }
-    console.log('again');
 }
 
+/* Minor outstanding issues:
+ * - sometimes, after ending paused, the play icon doesn't change to the repeat icon
+ */

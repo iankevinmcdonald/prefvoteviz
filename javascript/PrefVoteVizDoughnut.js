@@ -156,7 +156,6 @@ PrefVoteVizDoughnut.prototype._initCountDict = function () {
 	}
 	
 	for( let countNumber in this.data.countDict ) {
-		//console.log('countNumber',countNumber);
 		this.candidateArcs[ countNumber ] = [];
 		let votesOnCountRing = 0;
 		let candidatesLeft = 0, candidatesElected = 0;
@@ -224,7 +223,7 @@ PrefVoteVizDoughnut.prototype._initCountDict = function () {
 		//Padding betweeen each remaining candidate
 		let arcPadding = ( 2*Math.PI - this.rFactor * votesOnCountRing ) / ( candidatesLeft + candidatesElected )
 		let currentStartAngle = arcPadding /2;
-		//console.log( 'arcPadding', arcPadding, 'currentStartAngle', currentStartAngle, 'votesOnCountRing',votesOnCountRing, 'candidatesLeft', candidatesLeft );
+
 		for( let i=0; i < this.data.candidates.length; i++) {
 			let thisCandidate = this.data.candidates[ this.candidateOrder[i] ];
 			let totalVotes = this.data.countDict[countNumber][ thisCandidate.id ].total ;
@@ -254,7 +253,6 @@ PrefVoteVizDoughnut.prototype._initCountDict = function () {
 					}
 				}
 				
-				//console.log('i',i, thisCandidate.name, 'start,end,vote',currentStartAngle,endAngle,voteAngle);
 				this.candidateArcs[countNumber][i] = {
 					'candidateId' : thisCandidate.id,
 					'candidateClass': 'candidate_' + thisCandidate.id,
@@ -389,10 +387,10 @@ PrefVoteVizDoughnut.prototype.getNewlyElectedRisingArcs = function ( countNumber
 PrefVoteVizDoughnut.prototype.resetForStep = function() {
 	// Remove anything in mid-animation
 	this.svg
-		.selectAll('#donutAnimation *')
+		.selectAll('*')
 		.interrupt();
 	this.svg
-		.selectAll('#donutAnimation .transfer, #donutAnimation .transferer, #donutAnimation .newlyElected, #donutAnimation .fading, #donutAnimation .excluded')
+		.selectAll('.transfer, .transferer, .newlyElected, .fading, .excluded')
 		.remove();
 }
 
@@ -502,7 +500,7 @@ PrefVoteVizDoughnut.prototype.showStep = function( countNum ) {
 	
 	//And elected candidates
 	this.svg
-		.selectAll('#donutAnimation path.elected')
+		.selectAll('path.elected')
 		.data(this._getCandidateArcs( countNum, true ), function(d) { return d.candidateId ; })
 		.join('path')
 		.attr('d', this.ARCS.elected )
@@ -510,7 +508,7 @@ PrefVoteVizDoughnut.prototype.showStep = function( countNum ) {
 	;
 	// And elected candidate labels
 	this.svg
-		.selectAll('#donutAnimation text.elected')
+		.selectAll('text.elected')
 		.data(this._getCandidateArcs( countNum , true ), function(d) { return d.candidateId; })
 		.join('text')
 		.text( function(d) { return d.candidateName ; })
@@ -523,7 +521,7 @@ PrefVoteVizDoughnut.prototype.showStep = function( countNum ) {
 
 	// Elected candidate Images
 	this.svg
-		.selectAll('#donutAnimation image.elected')
+		.selectAll('image.elected')
 		.data(
 			this
 			._getCandidateArcs( countNum, true )
@@ -544,16 +542,16 @@ PrefVoteVizDoughnut.prototype.showStep = function( countNum ) {
 PrefVoteVizDoughnut.prototype.updateCandidateText = function( thisCandidate, thisCandidateThisCount ) {
 	// Mark as elected or eliminated if apt
 	if ( thisCandidateThisCount.status === 'Elected') {
-		console.log('Elected!');
+		//console.log('Elected!');
 	} else if ( thisCandidateThisCount.status === 'Excluded' ) {
 		// If not already removed, remove.
-		let $thisCandidateLabelLine = this.svg.selectAll('#donutAnimation polyline.count.candidate_' + thisCandidate.id );
+		let $thisCandidateLabelLine = this.svg.selectAll('polyline.count.candidate_' + thisCandidate.id );
 		if ( $thisCandidateLabelLine.size() ) {
 			$thisCandidateLabelLine
 				.classed('fading', true).classed('count',false)
 				.transition().duration(150 * this.tick).style('opacity',0).remove();
 			;
-			let $thisCandidateLabel = this.svg.selectAll('#donutAnimation text.count.candidate_' + thisCandidate.id + ',#donutAnimation image.count.candidate_' + thisCandidate.id );
+			let $thisCandidateLabel = this.svg.selectAll('text.count.candidate_' + thisCandidate.id + ',image.count.candidate_' + thisCandidate.id );
 			$thisCandidateLabel
 				.classed('excluded',true).classed('count',false)
 				.transition().duration(150 * this.tick).style('opacity',0).remove;
@@ -571,8 +569,6 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 		// Reduce old one
 		// Animated winning arc
 		
-	console.log('animateTransfer(' + countNumber + ')' );
-
 	const that = this;
 	let needToShowStepAtEnd = false; //Happens if an arc appears in mid-animation
 	let cumulativeDelay =0; 
@@ -582,8 +578,8 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 	let newlyElectedCandidateIds = newlyElectedArcs.map( function(d) { return d.candidateId.toString() ; } );
 	
 	if ( newlyElectedArcs.length ) {
-		const $newlyElectedArcRiseTransition = this._animateElection( newlyElectedArcs );
-		await $newlyElectedArcRiseTransition.end();
+		const animatedVictoriesPromise = this._animateVictories( newlyElectedArcs );
+		await animatedVictoriesPromise;
 	}
 
 	var transfererID = null;
@@ -602,7 +598,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 		} else if ( newlyElectedCandidateIds.includes( c.toString() ) ) {
 			// In which case, remove the residual - faded out in ticks 0-75.
 			this.svg
-				.selectAll('#donutAnimation path.count.candidate_' + c )
+				.selectAll('path.count.candidate_' + c )
 				.classed('fading', true)
 				.transition()
 				.delay( cumulativeDelay ) //should be zero, unless I've added something since writing this comment
@@ -633,7 +629,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 	// It's coming from...'
 	let $transferArc = 
 		this.svg
-			.selectAll('#donutAnimation path.count.candidate_' + transfererID )
+			.selectAll('path.count.candidate_' + transfererID )
 			.classed('transferer', true)
 	;
 	
@@ -661,6 +657,9 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 	;
 		
 	// Set up the new arcs
+	if ( ! $transferArc.datum() ) {
+		debugger; 
+	}
 	let currentStartAngle = $transferArc.datum().startAngle;
 	let aTransferToArcs = []
 	cumulativeDelay = cumulativeDelay + $transferFromTransition.duration();
@@ -830,30 +829,25 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 					} else {
 						let newStartAngle =thisCandidateArc.startAngle;
 						let newEndAngle = thisCandidateArc.endAngle;
-						return that._angleTweenFac( datum, newStartAngle, newEndAngle, '_labelImagePos' );
+						return that._angleTweenFac( datum, newStartAngle, newEndAngle, that._labelImagePos );
 					}
 				}
 			)
 	
-		await $rotateCountTransition.end();
-		console.log('$rotateCountTransition ended');
-		
+		await $rotateCountTransition.end();		
 	} 
 	
 	await splitTransitionPromise;
-	console.log('$splitTransition ended');
 
 	$splitTransition.selection()
-		.attr('class',function(d) { console.log('Adding count to attribute'); return 'count ' + d.candidateParty + ' ' + d.candidateClass ; } )
+		.attr('class',function(d) { return 'count ' + d.candidateParty + ' ' + d.candidateClass ; } )
 		.filter( 
 			function( datum, index, nodes ) {
 				let candidateId = datum.candidateId;
 				if ( countNumber > 0 && that.data.countDict[countNumber-1][candidateId].isShown ) {
-					console.log('removing transfer arc',datum);
 					return true; // remove redundant arc.
 				} else {
 					// In this scenario we will now need to assign a label.
-					console.log('keeping transfer arc',datum);
 					needToShowStepAtEnd = true;
 					return false;
 				}
@@ -869,10 +863,8 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 		.attr('d', that.ARCS.count )
 	;
 	
-	console.log( 'needToShowStepAtEnd',needToShowStepAtEnd, 'countNumber',countNumber);
 	// In the final round, everything elese that's not elected needs to be moved up
 	if ( !( countNumber +1 in this.data.countDict ) ) {
-		console.log ('Inferring final round, countNumber=', countNumber );
 		// If someone's elected, we need to split elected away from the transfer.
 		let finallyElectedArcs = this.getNewlyElectedRisingArcs( countNumber+1 );
 		
@@ -883,7 +875,8 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 		
 		// We actually have two problems here.
 		if ( finallyElectedArcs.length ) {
-			that._animateElection( finallyElectedArcs );
+			await that._animateVictories( finallyElectedArcs );
+			//console.log('Deleting detritus left in count...');
 			await that.svg.selectAll('path.count,polyline.count,text.count,image.count')
 				.classed('fading', true)
 				.transition()
@@ -894,18 +887,13 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 		}
 		
 	} else if ( needToShowStepAtEnd ) {
-		console.log('About to show next step ..');
+		//console.log('About to show next step ..');
 		this.showStep( countNumber );
 	}
 	
 	
-	return ;
+	return true; // 
 	
-	// startAngle & sendAngle are still in the datum ; but we do need a new arc.
-	
-	
-	// I need to define an arc Tween function that changes inner, and an arc tween function that 
-	// rotates (or is this just a transform?)
 	
 }
 	
@@ -913,20 +901,22 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
  	- decreasing order of vote share
  	- then any remainder (we don't bother recalculating transfers for final candidates) */
 	
-PrefVoteVizDoughnut.prototype._animateElection = function( newlyElectedArcs ) {
+PrefVoteVizDoughnut.prototype._animateVictories = async function( newlyElectedArcs ) {
+
+	for( const thisNewlyElectedArc of newlyElectedArcs ) {
+		await this._animateVictory( thisNewlyElectedArc );
+	}
+	
+	return true;
+}
+
+PrefVoteVizDoughnut.prototype._animateVictory = async function( thisNewlyElectedArc ) {
+
 	const that = this;
 
-//		console.log('_animateElection( newlyElectedArcs= ', newlyElectedArcs );
-	// Standardising toString so includes works.
-	var newlyElectedCandidateIds = newlyElectedArcs.map( function(d) { return d.candidateId.toString()  ; });
-			
-	// Change the 'count' arcs that are about to rise
+	// Truncate the 'count' arc that is about to rise, because part of it will be transferred
 	this.svg
-		.selectAll('#donutAnimation path.count')
-		// It still has last round's value, so we're checking whether isNewlyElected1 is true when we mean isNewlyElected2'
-		.filter( function(d){ 
-			return newlyElectedCandidateIds.includes(d.candidateId.toString()) ; 
-		} )
+		.selectAll('path.count.' + thisNewlyElectedArc.candidateClass)
 		.datum( function(d) { 
 			let newD = Object.assign( {}, d ); 
 			newD.startAngle = newD.startAngle + that.quotaAngle ; 
@@ -934,81 +924,110 @@ PrefVoteVizDoughnut.prototype._animateElection = function( newlyElectedArcs ) {
 		})
 		.attr( 'd', this.ARCS.count )
 	;
-	//Remove the polylines, for both aesthetic and not-mucking-up-other-transitions reasons
-	that.svg.selectAll('#donutAnimation polyline.count')
-		.filter( function(d) { 
 
-			return newlyElectedCandidateIds.includes(d.candidateId) ;
-		}) 
+	//Remove the polylines, for both aesthetic and not-mucking-up-other-transitions reasons
+	that.svg.selectAll('polyline.count.' + thisNewlyElectedArc.candidateClass )
 		.remove();
 
-	let $NewlyElectedArcRiseTransition = 
+	// created a new newly elected arc.
+	
+	let $newlyElectedArc = 
 		this.svg
-			.selectAll('#donutAnimation path.newlyElected')
-			.data( newlyElectedArcs, function(d) { return d.candidateId ; })
-			.join('path')
+			.append('path')
+			.datum( Object.assign({}, thisNewlyElectedArc) )
 			.attr('d', this.ARCS.count )
-			.attr('class', function(d) { return 'newlyElected ' + d.candidateParty + ' ' + d.candidateClass ; } )
-			.each(function(d) {
-				that.svg
-				.select('text.label.' + d.candidateClass)
-				.classed('count',false).classed('elected', true)
-				// And also need to move it to the right position
-				.data( newlyElectedArcs, function(d) { return d.candidateId ; })
-				.style( 'text-anchor', function(d) { return (d.xSign > 0 ) ? 'start': 'end'; })
-				.transition()
-				.duration( 300 * this.tick )
-				.attrTween('transform', 
-					function(datum) {
-						let candidateId = datum.candidateId;
-						let thisCandidateArc = that._withCandidateId( newlyElectedArcs, candidateId );
-						// The text could have been deleted between defining and running this transformation, in which case...
-						if ( thisCandidateArc === undefined ) {
-							debugger;
-						} else {
-							let newStartAngle =thisCandidateArc.startAngle;
-							let newEndAngle = thisCandidateArc.endAngle;
-							return that._labelPosAngleTweenFac( datum, newStartAngle, newEndAngle );
-						}
-					}
-				);
-				
-				// Similarly for the image
-				that.svg
-				.select('image.label.' + d.candidateClass )
-				.classed('count',false).classed('elected', true)
-				.data( newlyElectedArcs, function(d) { return d.candidateId ; })
-				.transition( 300 * this.tick )
-				.attrTween('transform',
-					function(datum) {
-						let candidateId = datum.candidateId;
-						let thisCandidateArc = that._withCandidateId( newlyElectedArcs, candidateId );
-						// The image  could have been deleted between defining and running this transformation, in which case...
-						if ( thisCandidateArc === undefined ) {
-							debugger;
-						} else {
-							let newStartAngle =thisCandidateArc.startAngle;
-							let newEndAngle = thisCandidateArc.endAngle;
-							return that._angleTweenFac( datum, newStartAngle, newEndAngle, '_labelImagePos' );
-						}
-					}
-				)
-				
-			})
+			.attr('class', function (d) { return 'newlyElected ' + d.candidateParty + ' ' + d.candidateClass; })
+	;
+	
+	let promiseLinedUp;
+	if ( this.winnerBoxes[ thisNewlyElectedArc.seatIndex ].startAngle == thisNewlyElectedArc.startAngle ) {
+		promiseLinedUp = Promise.resolve(true);
+	} else {
+		// Must rotate, and when ended, set datum
+		
+		thisNewlyElectedArc.startAngle = that.winnerBoxes[ thisNewlyElectedArc.seatIndex ].startAngle;
+		thisNewlyElectedArc.endAngle = that.winnerBoxes[ thisNewlyElectedArc.seatIndex ].endAngle;
+	
+		promiseLinedUp = $newlyElectedArc
+			.transition()
+			.duration( 300 * this.tick )
+			.attrTween('d',
+				function( datum ) {
+					let newStartAngle = thisNewlyElectedArc.startAngle;
+					let newEndAngle = thisNewlyElectedArc.endAngle;
+					return that._voteStartAngleTweenFac( datum, newStartAngle, newEndAngle );
+				}
+			)
+			.on(
+				'end',
+				function(d,i,n) {
+					d = thisNewlyElectedArc;
+				}
+			)
+			.end()
+		;
+		
+	}
+	
+	
+	
+	;
+	
+	// Not clear what these do ...
+	
+	this.svg
+		.select('text.label.' + thisNewlyElectedArc.candidateClass)
+		.classed('count',false).classed('elected', true)
+		// And also need to move it to the right position
+		.datum( thisNewlyElectedArc )
+		.style( 'text-anchor', function(d) { return (d.xSign > 0 ) ? 'start': 'end'; })
+		.transition()
+		.duration( 300 * this.tick )
+		.attrTween('transform', 
+			function(datum) {
+				let candidateId = datum.candidateId;
+				// The text could have been deleted between defining and running this transformation, in which case...
+				// But also, are these angles correct?
+				let newStartAngle =thisNewlyElectedArc.startAngle;
+				let newEndAngle = thisNewlyElectedArc.endAngle;
+				return that._labelPosAngleTweenFac( datum, newStartAngle, newEndAngle );
+			}
+		);
+		
+		// Similarly for the image
+	this.svg
+		.select('image.label.' + thisNewlyElectedArc.candidateClass  )
+		.classed('count',false).classed('elected', true)
+		.datum( thisNewlyElectedArc )
+		.transition( 300 * this.tick )
+		.attrTween('transform',
+			function(datum) {
+				let candidateId = datum.candidateId;
+				let newStartAngle =thisNewlyElectedArc.startAngle;
+				let newEndAngle = thisNewlyElectedArc.endAngle;
+				return that._angleTweenFac( datum, newStartAngle, newEndAngle, that._labelImagePos );
+			}
+		)
+			
+	await promiseLinedUp;
+	
+	$newlyElectedArc.datum( thisNewlyElectedArc );
+	
+	let $newlyElectedArcRiseTransition = $newlyElectedArc
 			.transition()
 			.duration( 300 * this.tick )
 			.attrTween("d", this._voteStatusTweenFac('elected'))
 
 			.on('end', function(d) { 
 				this.classList.add('elected'); 
-				this.classList.remove('newlyElected'); 
+				this.classList.remove('newlyElected');
 			} )
 	;
 	
 	// Find that candidate and move them into position and embolden them.
 	
 				
-	return $NewlyElectedArcRiseTransition;
+	return $newlyElectedArcRiseTransition.end();
 
 }
 		
@@ -1045,12 +1064,13 @@ PrefVoteVizDoughnut.prototype._voteStatusTweenFac = function( newStatus ) {
 	
 	/* Changing start angle, end angle fixed. Returns a function that takes the datum & returns a transition function  */
 	
-PrefVoteVizDoughnut.prototype._voteStartAngleTweenFac = function( datum, newStartAngle ) {
+PrefVoteVizDoughnut.prototype._voteStartAngleTweenFac = function( datum, newStartAngle, newEndAngle ) {
 	const that = this;
-	//console.log( datum, newStartAngle );
 	let oldStartAngle = datum.startAngle;
 	let oldEndAngle = datum.endAngle;
-	let newEndAngle = newStartAngle + datum.angle;
+	if ( !newEndAngle ) {
+		newEndAngle = newStartAngle + datum.angle;
+	}
 	let interpolateStart = d3.interpolateNumber( oldStartAngle, newStartAngle );
 	let interpolateEnd = d3.interpolateNumber( oldEndAngle, newEndAngle )
 	
@@ -1061,7 +1081,7 @@ PrefVoteVizDoughnut.prototype._voteStartAngleTweenFac = function( datum, newStar
 	}
 }
 	
-PrefVoteVizDoughnut.prototype._angleTweenFac = function( datum, newStartAngle, newEndAngle, methodName ) {
+PrefVoteVizDoughnut.prototype._angleTweenFac = function( datum, newStartAngle, newEndAngle, method ) {
 	const that = this;
 
 	let oldStartAngle = datum.startAngle;
@@ -1072,7 +1092,7 @@ PrefVoteVizDoughnut.prototype._angleTweenFac = function( datum, newStartAngle, n
 	return function( transitionTime ) {
 		datum.startAngle = interpolateStart( transitionTime );
 		datum.endAngle = interpolateEnd( transitionTime );
-		return that[methodName]( datum );
+		return method.call( that, datum );
 	}
 			
 }
