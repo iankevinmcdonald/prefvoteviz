@@ -67,7 +67,7 @@ PrefVoteVizDoughnut.prototype._setup = function() {
 			padAngle: 0,
 			startAngle: thisStartAngle,
 			endAngle: thisStartAngle + this.quotaAngle,
-			xSign: thisStartAngle + this.quotaAngle/2 < Math.PI ? 1 : -1,
+			xSign: ( thisStartAngle + this.quotaAngle/2 ) < Math.PI ? 1 : -1,
 		}
 	}
 
@@ -128,7 +128,7 @@ PrefVoteVizDoughnut.prototype._initCountDict = function () {
 	
 	// For every countDict, I need a spacing & a set of candidate arcs
 	// Because they're in their own order, they also need to retain the candidate information.'
-	// Reminder that these are at *end* of round
+	// Reminder that these vote numbers are at *end* of round
 	this.candidateArcs = {};
 	this.electedCandidateArcs = {};
 	
@@ -154,14 +154,51 @@ PrefVoteVizDoughnut.prototype._initCountDict = function () {
 		this.data.candidates[thisCandidateId].seatIndex = i;
 		allElectedCandidateArcs[i] = thisArc;
 	}
+
+		// isNewlyElected1 : passes quota this round, align with winning box
+		// isNewlyElected2 : the round they rise to the winning box & transfer (thus feature in electedCandidatesBySeat);
+		// - also the first round with the "Elected" status
+		
+	// there are also the "finally elected" that do not go through the pre-rotation
+	
+	// isNewlyElected make more sense to go through one candidate at a time.
+	
+	// blank all
+	for( let countNumber in this.data.countDict ) {
+		for ( let candidateId in this.data.countDict[countNumber] ) {
+			this.data.countDict[countNumber][candidateId].isNewlyElected1 = false;
+			this.data.countDict[countNumber][candidateId].isNewlyElected2 = false;
+			this.data.countDict[countNumber][candidateId].isFinallyElected = false;
+		}
+	}
+	
+	// Fill in elected.
+	for( let i=0; i < this.data.candidates.length; i++) {
+		let thisCandidate = this.data.candidates[ this.candidateOrder[i] ];
+		let countInWhichElected = null;
+		if ( thisCandidate.status == 'Elected' ) {
+			//which count are they elected in?
+			for ( let countNumber in this.data.countDict ) {
+				if ( this.data.countDict[countNumber][ thisCandidate.id ].status == 'Elected' ) {
+					countInWhichElected = countNumber;
+					break;
+				}
+			}
+			
+			if ( countInWhichElected != null ) {
+				this.data.countDict[countInWhichElected-1][thisCandidate.id].isNewlyElected1 = true;
+				this.data.countDict[countInWhichElected][thisCandidate.id].isNewlyElected2 = true;
+			} else {
+				this.data.countDict[ this.data.countDict.length-1 ][thisCandidate.id].isFinallyElected = true;
+			}
+		} 
+	}
+
 	
 	for( let countNumber in this.data.countDict ) {
 		this.candidateArcs[ countNumber ] = [];
 		let votesOnCountRing = 0;
 		let candidatesLeft = 0, candidatesElected = 0;
-		
-		// isNewlyElected1 : passes quota this round, align with winning box
-		// isNewlyElected2 : the round they rise to the winning box & transfer (thus feature in electedCandidatesBySeat);
 		
 		let newlyElectedCandidateIDs = [ ];
 		// First pass to work out the spacing and circle start
@@ -173,42 +210,24 @@ PrefVoteVizDoughnut.prototype._initCountDict = function () {
 			// Note that "isShown" means "on the main ring", so elected candidates are not shown
 			
 			if ( totalVotes <= 0 ) {
-				this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected1 = false;
-				this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected2 = false;
 				this.data.countDict[countNumber][ thisCandidate.id ].isShown = false;
 			// We include status = '', and the first two rounds with status = 'Elected'
 			} else if ( this.data.countDict[countNumber][ thisCandidate.id ].status  == '' ) {
-				this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected1 = false;
-				this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected2 = false;
 				this.data.countDict[countNumber][ thisCandidate.id ].isShown = true;
 			} else if ( this.data.countDict[countNumber][ thisCandidate.id ].status  == 'Excluded' ) {
-				this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected1 = false;
-				this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected2 = false;
 				this.data.countDict[countNumber][ thisCandidate.id ].isShown = false;
 			} else if ( this.data.countDict[countNumber][ thisCandidate.id ].status  == 'Elected' ) {
-				// If already moved to the elected box
-				if ( (countNumber -2 in this.data.countDict ) && ( this.data.countDict[countNumber-2][ thisCandidate.id ].status  == 'Elected' ) ) {
-					
-					this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected1 = false;
-					this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected2 = false;
-					this.data.countDict[countNumber][ thisCandidate.id ].isShown = false;
-					candidatesElected ++;
-				} else if ( (countNumber -1 in this.data.countDict ) && ( this.data.countDict[countNumber-1][ thisCandidate.id ].status  == 'Elected' ) ) {
-					this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected1 = false;
-					this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected2 = true;
-					this.data.countDict[countNumber][ thisCandidate.id ].isShown = false;
-					// Or this is the first 'Elected' step, in which we show the share going above quota without animating the rise
-					candidatesElected ++;
-				} else {
-					this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected1 = true;
-					newlyElectedCandidateIDs.push( thisCandidate.id );
-					this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected2 = false;
-					this.data.countDict[countNumber][ thisCandidate.id ].isShown = true;
-				}
+				// At newlyElected2 and on, appears in the winner circle
+				this.data.countDict[countNumber][ thisCandidate.id ].isShown = false;
+				candidatesElected ++;
 			}
 			
-
-
+			//Push to array on isNewlyElected1
+			if ( this.data.countDict[countNumber][ thisCandidate.id ].isNewlyElected1 ) {
+				newlyElectedCandidateIDs.push( thisCandidate.id );
+			}
+			
+			// How many votes divided between how many candidates on the ring?
 			if ( this.data.countDict[countNumber][ thisCandidate.id ].isShown ) { 
 				votesOnCountRing += parseFloat( this.data.countDict[countNumber][ thisCandidate.id ].total );
 				candidatesLeft ++;
@@ -217,6 +236,7 @@ PrefVoteVizDoughnut.prototype._initCountDict = function () {
 		}
 		
 		if (!candidatesLeft) {
+			// Before lost of math errors happen
 			break;
 		}
 		
@@ -270,6 +290,7 @@ PrefVoteVizDoughnut.prototype._initCountDict = function () {
 					'isNewlyElected1' : this.data.countDict[countNumber][thisCandidate.id].isNewlyElected1,
 					// in practice, will always be false becuase isNewlyElected2 never shown
 					'isNewlyElected2' : this.data.countDict[countNumber][thisCandidate.id].isNewlyElected2,
+					'isFinallyElected' : this.data.countDict[countNumber][thisCandidate.id].isFinallyElected,
 					
 					'seatIndex' : thisCandidate.status === 'Elected' ? thisCandidate.seatIndex : null
 				};
@@ -305,10 +326,12 @@ PrefVoteVizDoughnut.prototype._initCountDict = function () {
 		// And there'll need to be a subsequent animation step to line up the others.'
 		var newlyElectedCandidateStartAngle;
 		if (newlyElectedCandidateIDs.length ) {
-			
 			let newlyElectedArcs = $.grep( that.candidateArcs[ countNumber ], function(arc) { return arc !== undefined && arc.isNewlyElected1 ; } );
+			if ( newlyElectedCandidateIDs.length > 1 ) {
+				debugger; // We expect our input data to do one at a time.
+			}
 			if ( newlyElectedArcs.length == 0 ) {
-				debugger; // This should not happen; we have a newlyElected arc for this one.
+				debugger; // This should not happen; we have just created a newlyElected arc for this one.
 			}
 			
 			for( const thisNewlyElectedArc of newlyElectedArcs ) {
@@ -442,9 +465,16 @@ PrefVoteVizDoughnut.prototype._labelPolyline = function( datum ) {
 	let labelCentroidPos = this.ARCS.label.centroid(datum);
 	let yPos = this._labelYPos( datum );
 	let labelPos = [ this.radius * datum.xSign,  yPos ];
-	let radialPortion = yPos / labelCentroidPos[1];
-	let bendPos = [ labelCentroidPos[0]*radialPortion, yPos ];
-	return [ startPos, bendPos, labelPos ];
+	// Add the bend.
+	if ( yPos ) {
+		let radialPortion = yPos / labelCentroidPos[1];
+		let bendPos = [ labelCentroidPos[0]*radialPortion, yPos ];
+		return [ startPos, bendPos, labelPos ];
+	// In this special case there is no need for a bend - and if we tried to calculate
+	// where it sits by dividing by the label y-co-ord we'd get division by zero error.
+	} else {
+		return [ startPos, labelPos ];
+	}
 }
 	
 PrefVoteVizDoughnut.prototype.showStep = function( countNum ) {
@@ -611,15 +641,22 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 	
 	// Placeholder for adding a message (possibly to handle an unusual retransfer with, say, Meek STV)
 	if ( aTransfererInRace.length == 0 && aTransfererElected.length > 0 ) {
+	
+		//debugger ;
 		// Needs a message...
 		this.svg.append('text')
 			.text('Message will go here for count ' + countNumber )
 			.attr('class', 'message')
-			.transition()
-			.delay(cumulativeDelay + 75 * this.tick ) // cumulativeDelay should be zero unless changed since this comment
+			.attr('text-anchor','middle')
+			.transition('textMessage')
+			.delay( 2000 * this.tick ) // cumulativeDelay should be zero unless changed since this comment
 			.duration(75 * this.tick).style('opacity' ,0)
-			.remove()
+/*			.on('end.textMessage', function(d,i,n) { alert('end'); debugger ; } )
+			.on('interrupt.textMessage', function(d,i,n) { alert ('interrupt'); debugger; } )
+			.on('cancel.textMessage', function(d,i,n) { alert('cancel'); debugger; } )
+ */			.remove()
 		;
+		// why is the above not removed?
 		this.showStep(countNumber);
 		return;
 	} else {
@@ -744,7 +781,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 	// Time is again the problem.
 	
 	// If the transfer from someone winning puts someone else over the threshold, then they don't turn up in 'path.count'.
-	// All of these need to be able to add. Because async, we might not be able to reply to DOM changes
+	// All of these need to be able to add (an element). Because async, we might not be able to reply to DOM changes
 	
 	let $pathCount = d3.selectAll('path.count');
 	if ( ! $pathCount.empty() ) { // is empty
@@ -797,7 +834,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 		// Move the label and image 
 		
 		let $rotateLabel = d3.selectAll('text.count')
-			.transition()
+			.transition('moveCandidateText')
 			.delay( cumulativeDelay )
 			.duration( 150*this.tick )
 			.attrTween('transform', 
@@ -817,7 +854,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 		;
 	
 		d3.selectAll('image.count')
-			.transition()
+			.transition('moveCandidateImage')
 			.delay( cumulativeDelay )
 			.duration( 150*this.tick )
 			.attrTween('transform',
@@ -866,16 +903,24 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 	// In the final round, everything elese that's not elected needs to be moved up
 	if ( !( countNumber +1 in this.data.countDict ) ) {
 		// If someone's elected, we need to split elected away from the transfer.
-		let finallyElectedArcs = this.getNewlyElectedRisingArcs( countNumber+1 );
+		
+		// NOte that all we actually need is a list of candidate classes.
+		
+		let finallyElectedArcs = this.candidateArcs[countNumber].filter( arc => arc.isFinallyElected );
 		
 		// There could also be two stags to this: the ones already in situ
 		// (possibly after transfers) and the "last candidates standing"
 		// who only met quota because the quota is shrining with each round,
 		// and that's not a factor we're trying to show.
 		
-		// We actually have two problems here.
+		
 		if ( finallyElectedArcs.length ) {
-			await that._animateVictories( finallyElectedArcs );
+		
+			// They have to be animated collectively, because:
+			// * we don't want the victorious arcs to cross each other
+			// * nor do we want them to cross the losing arcs.
+			// Thus losing arcs must vanish first.
+			await that._animateFinalVictories( finallyElectedArcs );
 			//console.log('Deleting detritus left in count...');
 			await that.svg.selectAll('path.count,polyline.count,text.count,image.count')
 				.classed('fading', true)
@@ -899,7 +944,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 	
 /* When multiple arcs are passed, we need to raise them in a particular order:	
  	- decreasing order of vote share
- 	- then any remainder (we don't bother recalculating transfers for final candidates) */
+ 	- then any remainder */
 	
 PrefVoteVizDoughnut.prototype._animateVictories = async function( newlyElectedArcs ) {
 
@@ -938,15 +983,68 @@ PrefVoteVizDoughnut.prototype._animateVictory = async function( thisNewlyElected
 			.attr('d', this.ARCS.count )
 			.attr('class', function (d) { return 'newlyElected ' + d.candidateParty + ' ' + d.candidateClass; })
 	;
+
+	let promiseLinedUp = this._rotateVictoriousArcIntoPlace( $newlyElectedArc, thisNewlyElectedArc );
+	 	
+	await promiseLinedUp;
 	
+	let promiseRaise = this._raiseElectedArcToWinnerBox( $newlyElectedArc );
+	return promiseRaise;
+
+}
+
+PrefVoteVizDoughnut.prototype._animateFinalVictories = async function( newlyElectedArcs ) {
+	
+	// Remove all the polylines - no longer needed.
+	this.svg.selectAll('polyline.count').remove();
+	
+	// We need to get rid of all the non-winners in case they get in the way.
+	let candidateSelector = newlyElectedArcs.map( x => '.' + x.candidateClass ).join(",");
+	this.svg.selectAll('label.count,path.count')
+		.filter(candidateSelector)
+		.classed('count',false)
+		.classed('newlyElected',true);
+		
+	let $losingLosers = this.svg.selectAll('label.count,path.count')
+		.classed('fading', true).classed('count',false)
+		.transition()
+		.duration(150 * this.tick)
+		.style('opacity',0)
+		.remove()
+	;
+	await $losingLosers.end();
+	
+	let aPromiseLinedUp = [];
+	// Then rotate the ones left
+	for( const thisNewlyElectedArc of newlyElectedArcs ) {
+		let $thisArc = this.svg.selectAll('path.newlyElected.' + thisNewlyElectedArc.candidateClass);
+		let thisPromise = this._rotateVictoriousArcIntoPlace( $thisArc, thisNewlyElectedArc);
+		aPromiseLinedUp.push( thisPromise );
+	}
+	
+	await Promise.all(aPromiseLinedUp);
+	
+	// And then elevate
+	let allArcs = this.svg.selectAll('path.newlyElected');
+	let promise = this._raiseElectedArcToWinnerBox( allArcs );
+	return promise;
+}
+
+
+PrefVoteVizDoughnut.prototype._rotateVictoriousArcIntoPlace = async function( $newlyElectedArc, thisNewlyElectedArc ) {
+
+	let that = this;
 	let promiseLinedUp;
-	if ( this.winnerBoxes[ thisNewlyElectedArc.seatIndex ].startAngle == thisNewlyElectedArc.startAngle ) {
+	if ( this.winnerBoxes[ thisNewlyElectedArc.seatIndex ].startAngle == $newlyElectedArc.datum().startAngle 
+		&& this.winnerBoxes[ thisNewlyElectedArc.seatIndex ].endAngle == $newlyElectedArc.datum().endAngle
+	) {
 		promiseLinedUp = Promise.resolve(true);
 	} else {
 		// Must rotate, and when ended, set datum
 		
-		thisNewlyElectedArc.startAngle = that.winnerBoxes[ thisNewlyElectedArc.seatIndex ].startAngle;
-		thisNewlyElectedArc.endAngle = that.winnerBoxes[ thisNewlyElectedArc.seatIndex ].endAngle;
+		thisNewlyElectedArc.startAngle = this.winnerBoxes[ thisNewlyElectedArc.seatIndex ].startAngle;
+		thisNewlyElectedArc.endAngle = this.winnerBoxes[ thisNewlyElectedArc.seatIndex ].endAngle;
+		thisNewlyElectedArc.xSign = this.winnerBoxes[ thisNewlyElectedArc.seatIndex].xSign;
 	
 		promiseLinedUp = $newlyElectedArc
 			.transition()
@@ -960,8 +1058,9 @@ PrefVoteVizDoughnut.prototype._animateVictory = async function( thisNewlyElected
 			)
 			.on(
 				'end',
-				function(d,i,n) {
-					d = thisNewlyElectedArc;
+				// I doubt this is pass by reference
+				function() {
+					d3.select(this).datum( thisNewlyElectedArc);
 				}
 			)
 			.end()
@@ -969,11 +1068,9 @@ PrefVoteVizDoughnut.prototype._animateVictory = async function( thisNewlyElected
 		
 	}
 	
-	
-	
 	;
 	
-	// Not clear what these do ...
+	// Rotate text and image labels
 	
 	this.svg
 		.select('text.label.' + thisNewlyElectedArc.candidateClass)
@@ -1009,11 +1106,12 @@ PrefVoteVizDoughnut.prototype._animateVictory = async function( thisNewlyElected
 			}
 		)
 			
-	await promiseLinedUp;
-	
-	$newlyElectedArc.datum( thisNewlyElectedArc );
-	
-	let $newlyElectedArcRiseTransition = $newlyElectedArc
+	return promiseLinedUp;
+}
+
+PrefVoteVizDoughnut.prototype._raiseElectedArcToWinnerBox = async function( $newlyElectedArcs) {
+
+	let $newlyElectedArcRiseTransition = $newlyElectedArcs
 			.transition()
 			.duration( 300 * this.tick )
 			.attrTween("d", this._voteStatusTweenFac('elected'))
@@ -1028,9 +1126,9 @@ PrefVoteVizDoughnut.prototype._animateVictory = async function( thisNewlyElected
 	
 				
 	return $newlyElectedArcRiseTransition.end();
-
 }
-		
+
+
 PrefVoteVizDoughnut.prototype._withCandidateId = function ( theseArcs, candidateID ) {
 	for ( let i = 0; i< theseArcs.length; i++) {
 		if ( theseArcs[i] !== undefined && theseArcs[i].candidateId == candidateID ) {

@@ -37,11 +37,11 @@ class OpaVoteList {
         foreach( $aItems as $item ) {
             list( $itemType, $itemID ) = $item;
             $itemJson = file_get_contents( "https://www.opavote.com/api/v1/items/$itemID?key=$key");
+            error_log($itemJson);
             // print $itemJson;
             $aItem = json_decode( $itemJson );
-            //print_r($aItem);
             // Status can be EDITING, VOTING, or END, and this makes a difference to what's available.
-            if ( $aItem->status == 'EDITING' ) { 
+            if ( $aItem->error || $aItem->status == 'EDITING' ) { 
                 continue;
             }
             
@@ -50,7 +50,7 @@ class OpaVoteList {
                 $aContests[] = [
                     'type' => $itemType,
                     'status' => $aItem->status,
-                    'reportUrl' => sprintf('https://www.opavote.com/reports/%d/%d?style=json' , $itemID , $i),
+                    'reportUrl' => sprintf('https://www.opavote.com/reports/%d/%d' , $itemID , $i),
                     'voteUrl' => sprintf('https://www.opavote.com/en/vote/%d' , $itemID ),
                     'label' => sprintf("%s - %s", $itemTitle, $aItem->contests[$i]->title),
                     'contestTitle' => $aItem->contests[$i]->title,

@@ -113,7 +113,9 @@ PrefVoteVizControl.prototype._loadData = function(sourceURL) {
 		throw { 'status': 'error', 'message' : 'No data returned' };
      } else if ( data.status == 'success' ) {
          return data.data;
-     } else if ( 'message' in 'data' ) {
+     } else if ( 'candidatesDict' in data ) {
+         return data;
+     } else if ( 'message' in data ) {
 	     throw data ;
 	 } else {
 	     	data.message = 'No message returned';
