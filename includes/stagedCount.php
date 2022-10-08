@@ -225,7 +225,7 @@ class StagedCount {
         $candidateRows=[];
         for( $i = $firstCandidateRow; $i<=$lastCandidateRow; $i++) {
             // Are there any vote totals more than zero?
-            for( $j = $colOffset; isset($aIn[$i][$j]); $j+= 2 ) {
+            for( $j = $colOffset+1; isset($aIn[$i][$j]); $j+= 2 ) {
                 // If this candidate gets any votes at any point (bearing in mind that in some STV forms candidates can start with zero but receive transfers)
                 if ( $aIn[$i][$j] > 0 ) {
                     $candidateRows[] = $aIn[$i];
