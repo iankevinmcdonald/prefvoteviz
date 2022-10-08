@@ -193,13 +193,15 @@ class StagedCount {
         for ( $col = 1; !is_numeric( $aIn[$firstCandidateRow][$col] ); $col++) {
             // Alpha numeric column 
             switch( strtolower( trim($aIn[$firstCandidateRow-1][$col]) ) ) {
+                case '':
+                    break;
                 case 'slug':
                 case 'file':
                     if ( !$hasSlugs ) {
                         $hasSlugs = 1;
                         $slugCol = $col;
                     } else {
-                        print "Warning: unidentified column $col\n";
+                        error_log( "Warning: extra slug column $col");
                     }
                     break;
                 case 'party':
@@ -209,7 +211,7 @@ class StagedCount {
                         $hasParties = 1;
                         $partyCol = $col;
                     } else {
-                        print "Warning: unidentified column $col\n";
+                        error_log( "Warning: unidentified column $col of heading line " . json_encode($aIn[$firstCandidateRow-1]));
                     }
                     break;
             }
