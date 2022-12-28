@@ -161,33 +161,33 @@ path.Elected{
 	background: #882255!important;
 }
 
-/* Doughnut */
+/* Doughnut - using US spelling for brevity */
 .None {
 	fill: #444444!important;
 	background: #444444!important;
 }
 
-#donutAnimation path.seat.vacant {
+.donutAnimation path.seat.vacant {
 	fill: white;
 	stroke: grey;
 	stroke-dasharray: 10;
 }
 
-#donutAnimation polyline.count, #donutAnimation polyline.fading {
+.donutAnimation polyline.count, #donutAnimation polyline.fading {
 	fill: none;
 	stroke-width: 1px;
 	stroke: black;
 }
 
-#donutAnimation text.excluded {
+.donutAnimation text.excluded {
 	text-decoration: line-through;	
 }
 
-#donutAnimation text.elected {
+.donutAnimation text.elected {
 	font-weight: bolder;
 }
 
-#donutAnimation path.elected {
+.donutAnimation path.elected {
 	stroke-width: 2px;
 	stroke: black;
 }
