@@ -3,10 +3,10 @@
  */
  
  
- function PrefVoteVizBaseView ( data, options, $target ) {
+function PrefVoteVizBaseView ( data, options, $target ) {
 	this.data = data;
 	this.tick = 5;
- 	for ( optionName in options ) {
+	for ( var optionName in options ) {
 		switch(optionName) {
 			case 'imageDir':
 			case 'tick':
@@ -17,8 +17,8 @@
 		}
 	}
 	this.$target = $target;
- }
- 
+}
+
 PrefVoteVizBaseView.prototype.show = function() {  };
 
 PrefVoteVizBaseView.prototype.showStep = function() { };

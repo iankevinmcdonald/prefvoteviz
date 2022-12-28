@@ -1,3 +1,6 @@
+/* global d3,$,PrefVoteVizBaseView */
+/* eslint no-debugger: "off" */
+
 function PrefVoteVizDoughnut( data, options, $target ) {
 	PrefVoteVizBaseView.call( this, data, options, $target );
 	// radius by proportion of the different doughnuts
@@ -8,8 +11,8 @@ function PrefVoteVizDoughnut( data, options, $target ) {
 		'label': 1.01,
 	};
 
-	if ( this.$target.find('.quota').length == 0 ) {
-		this.$target.append( '<div class="donutAnimation" id="donutAnimation"></div>');
+	if ( this.$target.find('.donutAnimation').length == 0 ) {
+		this.$target.append( '<div class="donutAnimation" id="donutAnimation" ></div>');
 	}
 
 	this._setup();
@@ -20,7 +23,8 @@ function PrefVoteVizDoughnut( data, options, $target ) {
 Object.setPrototypeOf( PrefVoteVizDoughnut.prototype, PrefVoteVizBaseView );
 
 PrefVoteVizDoughnut.prototype._setup = function() {
-	let widthPx = $('#donutAnimation').innerWidth();
+    let $donutAnimation = this.$target.find('.donutAnimation');
+	let widthPx = $donutAnimation.innerWidth();
 	
 	/*
 		The labels add ~ 0.5r on either side and around 0.25r above and below.
@@ -31,7 +35,7 @@ PrefVoteVizDoughnut.prototype._setup = function() {
 	let heightPx =  this.radius * 2.5;
 
 	// create the base blank SVG object.
-	this.svg = d3.select("#donutAnimation")
+	this.svg = d3.select( $donutAnimation[0] )
 		.append("svg")
 		.attr("width", widthPx)
 		.attr("height", heightPx )
@@ -58,8 +62,8 @@ PrefVoteVizDoughnut.prototype._setup = function() {
 	this.winnerBoxes = [];
 	var boxOffset = Math.PI/( ( this.data.constituency.seats+1 ) * this.data.constituency.seats );
 
-	let innerRadius = this.radius * this.INNER_BY_STATUS.elected;
-	let outerRadius = this._outerFromInner( innerRadius);
+	//let innerRadius = this.radius * this.INNER_BY_STATUS.elected;
+	// let outerRadius = this._outerFromInner( innerRadius);
 	for( let i=0; i < this.data.constituency.seats ; i++ ) {
 		let thisStartAngle = boxOffset * (i+1) + (this.quotaAngle+boxOffset) * i;
 		this.winnerBoxes[ i]= {
@@ -580,7 +584,7 @@ PrefVoteVizDoughnut.prototype.updateCandidateText = function( thisCandidate, thi
 			$thisCandidateLabelLine
 				.classed('fading', true).classed('count',false)
 				.transition().duration(150 * this.tick).style('opacity',0).remove();
-			;
+			
 			let $thisCandidateLabel = this.svg.selectAll('text.count.candidate_' + thisCandidate.id + ',image.count.candidate_' + thisCandidate.id );
 			$thisCandidateLabel
 				.classed('excluded',true).classed('count',false)
@@ -833,7 +837,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 		
 		// Move the label and image 
 		
-		let $rotateLabel = d3.selectAll('text.count')
+		/* let $rotateLabel = */ d3.selectAll('text.count')
 			.transition('moveCandidateText')
 			.delay( cumulativeDelay )
 			.duration( 150*this.tick )
@@ -879,7 +883,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 	$splitTransition.selection()
 		.attr('class',function(d) { return 'count ' + d.candidateParty + ' ' + d.candidateClass ; } )
 		.filter( 
-			function( datum, index, nodes ) {
+			function( datum ) {
 				let candidateId = datum.candidateId;
 				if ( countNumber > 0 && that.data.countDict[countNumber-1][candidateId].isShown ) {
 					return true; // remove redundant arc.
@@ -943,8 +947,8 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 }
 	
 /* When multiple arcs are passed, we need to raise them in a particular order:	
- 	- decreasing order of vote share
- 	- then any remainder */
+	- decreasing order of vote share
+	- then any remainder */
 	
 PrefVoteVizDoughnut.prototype._animateVictories = async function( newlyElectedArcs ) {
 
@@ -985,7 +989,7 @@ PrefVoteVizDoughnut.prototype._animateVictory = async function( thisNewlyElected
 	;
 
 	let promiseLinedUp = this._rotateVictoriousArcIntoPlace( $newlyElectedArc, thisNewlyElectedArc );
-	 	
+
 	await promiseLinedUp;
 	
 	let promiseRaise = this._raiseElectedArcToWinnerBox( $newlyElectedArc );
@@ -1068,7 +1072,7 @@ PrefVoteVizDoughnut.prototype._rotateVictoriousArcIntoPlace = async function( $n
 		
 	}
 	
-	;
+	
 	
 	// Rotate text and image labels
 	
@@ -1082,7 +1086,7 @@ PrefVoteVizDoughnut.prototype._rotateVictoriousArcIntoPlace = async function( $n
 		.duration( 300 * this.tick )
 		.attrTween('transform', 
 			function(datum) {
-				let candidateId = datum.candidateId;
+				//let candidateId = datum.candidateId;
 				// The text could have been deleted between defining and running this transformation, in which case...
 				// But also, are these angles correct?
 				let newStartAngle =thisNewlyElectedArc.startAngle;
@@ -1099,7 +1103,7 @@ PrefVoteVizDoughnut.prototype._rotateVictoriousArcIntoPlace = async function( $n
 		.transition( 300 * this.tick )
 		.attrTween('transform',
 			function(datum) {
-				let candidateId = datum.candidateId;
+				//let candidateId = datum.candidateId;
 				let newStartAngle =thisNewlyElectedArc.startAngle;
 				let newEndAngle = thisNewlyElectedArc.endAngle;
 				return that._angleTweenFac( datum, newStartAngle, newEndAngle, that._labelImagePos );
@@ -1116,7 +1120,7 @@ PrefVoteVizDoughnut.prototype._raiseElectedArcToWinnerBox = async function( $new
 			.duration( 300 * this.tick )
 			.attrTween("d", this._voteStatusTweenFac('elected'))
 
-			.on('end', function(d) { 
+			.on('end', function() { 
 				this.classList.add('elected'); 
 				this.classList.remove('newlyElected');
 			} )
