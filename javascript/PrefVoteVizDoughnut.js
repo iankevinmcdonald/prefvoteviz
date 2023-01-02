@@ -4,6 +4,7 @@
 function PrefVoteVizDoughnut( data, options, $target ) {
 	PrefVoteVizBaseView.call( this, data, options, $target );
 	// radius by proportion of the different doughnuts
+    
 	this.INNER_BY_STATUS = {
 		'transfer': 0.1,
 		'count': 0.5,
@@ -14,18 +15,23 @@ function PrefVoteVizDoughnut( data, options, $target ) {
 	if ( this.$target.find('.donutAnimation').length == 0 ) {
 		this.$target.append( '<div class="donutAnimation" id="donutAnimation" ></div>');
 	}
-
 	this._setup();
 	this._initCountDict();
-
 }
 
 Object.setPrototypeOf( PrefVoteVizDoughnut.prototype, PrefVoteVizBaseView );
 
 PrefVoteVizDoughnut.prototype._setup = function() {
     let $donutAnimation = this.$target.find('.donutAnimation');
-	let widthPx = $donutAnimation.innerWidth();
-	
+    //default in testing
+    let widthPx;
+    // If we're in an actual browser rather than NodeJS
+    if ( typeof(global) === 'undefined' ) {
+        widthPx = $donutAnimation.innerWidth();
+    } else {
+        // running in JSDOM so not actually being rendered
+        widthPx = 1000;
+    }
 	/*
 		The labels add ~ 0.5r on either side and around 0.25r above and below.
 		So the overall dimensions are slightly over 3r by 2.5r
@@ -49,6 +55,7 @@ PrefVoteVizDoughnut.prototype._setup = function() {
 		Thus we calculate  everything at the start.
 		*/
 	this.ARCS = {};
+
 	for ( var arcName in this.INNER_BY_STATUS ) {
 		let innerRadius = this.INNER_BY_STATUS[ arcName ] * this.radius;
 		
@@ -74,7 +81,6 @@ PrefVoteVizDoughnut.prototype._setup = function() {
 			xSign: ( thisStartAngle + this.quotaAngle/2 ) < Math.PI ? 1 : -1,
 		}
 	}
-
 }
 
 // was initFirstcount
@@ -648,7 +654,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 	
 		//debugger ;
 		// Needs a message...
-		this.svg.append('text')
+		let messageTransition = this.svg.append('text')
 			.text('Message will go here for count ' + countNumber )
 			.attr('class', 'message')
 			.attr('text-anchor','middle')
@@ -662,7 +668,7 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 		;
 		// why is the above not removed?
 		this.showStep(countNumber);
-		return;
+		return messageTransition.end();
 	} else {
 		transfererID = aTransfererInRace[0];
 	}
@@ -932,16 +938,16 @@ PrefVoteVizDoughnut.prototype.animateTransfer = async function( countNumber ) {
 				.duration(that.tick * 150)
 				.style('opacity',0)
 				.remove()
+            return true;
 			
 		}
 		
 	} else if ( needToShowStepAtEnd ) {
 		//console.log('About to show next step ..');
 		this.showStep( countNumber );
-	}
-	
-	
-	return true; // 
+	} 
+    
+    return true;
 	
 	
 }
@@ -1231,4 +1237,9 @@ PrefVoteVizDoughnut.prototype._labelLinePointsTweenFac = function( datum, newSta
 		
 PrefVoteVizDoughnut.prototype._outerFromInner  = function (r) {
 	return Math.sqrt( r**2 + 0.2*(this.radius**2) ) ;
-}	
+}
+
+// Can be loaded as CommonJS for testing
+if ( typeof(module) === 'object' ) {
+    module.exports = PrefVoteVizDoughnut;
+}

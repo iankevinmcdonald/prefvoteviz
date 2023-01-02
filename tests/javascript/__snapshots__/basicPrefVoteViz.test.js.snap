@@ -1,0 +1,595 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`of dom 1`] = `
+jQuery {
+  "0": <svg
+    height="678"
+    width="1000"
+  >
+    <g
+      transform="translate(500,339)"
+    >
+      <path
+        class="seat vacant"
+        d="M124.279,-215.258A248.559,248.559,0,0,1,124.279,215.258L108.48,187.893A216.96,216.96,0,0,0,108.48,-187.893Z"
+        data-arc="[object Object]"
+      />
+      <path
+        class="seat vacant"
+        d="M-124.279,215.258A248.559,248.559,0,0,1,-124.279,-215.258L-108.48,-187.893A216.96,216.96,0,0,0,-108.48,187.893Z"
+        data-arc="[object Object]"
+      />
+      <path
+        class="count NoneC candidate_2"
+        d="M0,-181.926A181.926,181.926,0,0,1,180.675,-21.306L134.667,-15.88A135.6,135.6,0,0,0,0,-135.6Z"
+        data-candidate-id="2"
+      />
+      <path
+        class="count NoneB candidate_1"
+        d="M180.675,-21.306A181.926,181.926,0,0,1,73.039,166.621L54.44,124.192A135.6,135.6,0,0,0,134.667,-15.88Z"
+        data-candidate-id="1"
+      />
+      <path
+        class="count NoneE candidate_4"
+        d="M73.039,166.621A181.926,181.926,0,0,1,-104.765,148.733L-78.088,110.859A135.6,135.6,0,0,0,54.44,124.192Z"
+        data-candidate-id="4"
+      />
+      <path
+        class="count NoneA candidate_0"
+        d="M-104.765,148.733A181.926,181.926,0,0,1,-167.3,-71.469L-124.698,-53.27A135.6,135.6,0,0,0,-78.088,110.859Z"
+        data-candidate-id="0"
+      />
+      <path
+        class="count NoneD candidate_3"
+        d="M-167.3,-71.469A181.926,181.926,0,0,1,0,-181.926L0,-135.6A135.6,135.6,0,0,0,-124.698,-53.27Z"
+        data-candidate-id="3"
+      />
+      <polyline
+        class="count label candidate_2"
+        points="105.48425706032606,-118.65428596750814,129.5574299274993,-145.73306736228326,271.2,-145.73306736228326"
+      />
+      <polyline
+        class="count label candidate_1"
+        points="137.76642795913224,78.90614293836303,156.79275376539266,89.80352923124133,271.2,89.80352923124133"
+      />
+      <polyline
+        class="count label candidate_4"
+        points="-15.892326943245287,157.96582545081438,-25.542731542421244,253.88847629277274,-271.2,253.88847629277274"
+      />
+      <polyline
+        class="count label candidate_0"
+        points="-152.72410216882747,43.37184204934923,-168.22229958577628,47.77314715359844,-271.2,47.77314715359844"
+      />
+      <polyline
+        class="count label candidate_3"
+        points="-87.47496678684547,-132.4911251807774,-112.53792676209359,-170.45192573269907,-271.2,-170.45192573269907"
+      />
+      <text
+        class="count label candidate_2"
+        style="text-anchor: start;"
+        transform="translate(271.2,-145.73306736228326)"
+      >
+        Bill Gates
+      </text>
+      <text
+        class="count label candidate_1"
+        style="text-anchor: start;"
+        transform="translate(271.2,89.80352923124133)"
+      >
+        Elon Musk
+      </text>
+      <text
+        class="count label candidate_4"
+        style="text-anchor: end;"
+        transform="translate(-271.2,253.88847629277274)"
+      >
+        Richard Branson
+      </text>
+      <text
+        class="count label candidate_0"
+        style="text-anchor: end;"
+        transform="translate(-271.2,47.77314715359844)"
+      >
+        Steve Jobs
+      </text>
+      <text
+        class="count label candidate_3"
+        style="text-anchor: end;"
+        transform="translate(-271.2,-170.45192573269907)"
+      >
+        Warren Buffet
+      </text>
+    </g>
+  </svg>,
+  "length": 1,
+  "prevObject": jQuery {
+    "0": <div
+      id="showPrefVoteViz"
+    >
+      <div
+        class="donutAnimation"
+        id="donutAnimation"
+      >
+        <svg
+          height="678"
+          width="1000"
+        >
+          <g
+            transform="translate(500,339)"
+          >
+            <path
+              class="seat vacant"
+              d="M124.279,-215.258A248.559,248.559,0,0,1,124.279,215.258L108.48,187.893A216.96,216.96,0,0,0,108.48,-187.893Z"
+              data-arc="[object Object]"
+            />
+            <path
+              class="seat vacant"
+              d="M-124.279,215.258A248.559,248.559,0,0,1,-124.279,-215.258L-108.48,-187.893A216.96,216.96,0,0,0,-108.48,187.893Z"
+              data-arc="[object Object]"
+            />
+            <path
+              class="count NoneC candidate_2"
+              d="M0,-181.926A181.926,181.926,0,0,1,180.675,-21.306L134.667,-15.88A135.6,135.6,0,0,0,0,-135.6Z"
+              data-candidate-id="2"
+            />
+            <path
+              class="count NoneB candidate_1"
+              d="M180.675,-21.306A181.926,181.926,0,0,1,73.039,166.621L54.44,124.192A135.6,135.6,0,0,0,134.667,-15.88Z"
+              data-candidate-id="1"
+            />
+            <path
+              class="count NoneE candidate_4"
+              d="M73.039,166.621A181.926,181.926,0,0,1,-104.765,148.733L-78.088,110.859A135.6,135.6,0,0,0,54.44,124.192Z"
+              data-candidate-id="4"
+            />
+            <path
+              class="count NoneA candidate_0"
+              d="M-104.765,148.733A181.926,181.926,0,0,1,-167.3,-71.469L-124.698,-53.27A135.6,135.6,0,0,0,-78.088,110.859Z"
+              data-candidate-id="0"
+            />
+            <path
+              class="count NoneD candidate_3"
+              d="M-167.3,-71.469A181.926,181.926,0,0,1,0,-181.926L0,-135.6A135.6,135.6,0,0,0,-124.698,-53.27Z"
+              data-candidate-id="3"
+            />
+            <polyline
+              class="count label candidate_2"
+              points="105.48425706032606,-118.65428596750814,129.5574299274993,-145.73306736228326,271.2,-145.73306736228326"
+            />
+            <polyline
+              class="count label candidate_1"
+              points="137.76642795913224,78.90614293836303,156.79275376539266,89.80352923124133,271.2,89.80352923124133"
+            />
+            <polyline
+              class="count label candidate_4"
+              points="-15.892326943245287,157.96582545081438,-25.542731542421244,253.88847629277274,-271.2,253.88847629277274"
+            />
+            <polyline
+              class="count label candidate_0"
+              points="-152.72410216882747,43.37184204934923,-168.22229958577628,47.77314715359844,-271.2,47.77314715359844"
+            />
+            <polyline
+              class="count label candidate_3"
+              points="-87.47496678684547,-132.4911251807774,-112.53792676209359,-170.45192573269907,-271.2,-170.45192573269907"
+            />
+            <text
+              class="count label candidate_2"
+              style="text-anchor: start;"
+              transform="translate(271.2,-145.73306736228326)"
+            >
+              Bill Gates
+            </text>
+            <text
+              class="count label candidate_1"
+              style="text-anchor: start;"
+              transform="translate(271.2,89.80352923124133)"
+            >
+              Elon Musk
+            </text>
+            <text
+              class="count label candidate_4"
+              style="text-anchor: end;"
+              transform="translate(-271.2,253.88847629277274)"
+            >
+              Richard Branson
+            </text>
+            <text
+              class="count label candidate_0"
+              style="text-anchor: end;"
+              transform="translate(-271.2,47.77314715359844)"
+            >
+              Steve Jobs
+            </text>
+            <text
+              class="count label candidate_3"
+              style="text-anchor: end;"
+              transform="translate(-271.2,-170.45192573269907)"
+            >
+              Warren Buffet
+            </text>
+          </g>
+        </svg>
+      </div>
+      <div
+        class="controls at-start"
+        id="controls"
+      >
+        <a
+          class="again fa fa-step-backward"
+        />
+        <a
+          class="pause-replay fa fa-play"
+        />
+        <a
+          class="step fa fa-step-forward"
+        />
+      </div>
+      <div
+        class="stageNumbers"
+      >
+        <div
+          class="stageNumber completed"
+          data-stagenumber="0"
+        >
+          <p>
+            1
+          </p>
+        </div>
+        <div
+          class="stageNumber"
+          data-stagenumber="1"
+        >
+          <p>
+            2
+          </p>
+        </div>
+        <div
+          class="stageNumber"
+          data-stagenumber="2"
+        >
+          <p>
+            3
+          </p>
+        </div>
+        <div
+          class="stageNumber"
+          data-stagenumber="3"
+        >
+          <p>
+            4
+          </p>
+        </div>
+        <div
+          class="stageNumber"
+          data-stagenumber="4"
+        >
+          <p>
+            5
+          </p>
+        </div>
+      </div>
+      <div
+        class="quota"
+      />
+    </div>,
+    "length": 1,
+    "prevObject": jQuery {
+      "0": Document {
+        "location": Location {
+          "assign": [Function],
+          "hash": "",
+          "host": "example.org",
+          "hostname": "example.org",
+          "href": "https://example.org/",
+          "origin": "https://example.org",
+          "pathname": "/",
+          "port": "",
+          "protocol": "https:",
+          "reload": [Function],
+          "replace": [Function],
+          "search": "",
+          "toString": [Function],
+        },
+      },
+      "length": 1,
+    },
+  },
+}
+`;
+
+exports[`of opaVoteTechBnDemo 1`] = `
+jQuery {
+  "0": <svg
+    height="678"
+    width="1000"
+  >
+    <g
+      transform="translate(500,339)"
+    >
+      <path
+        class="seat vacant"
+        d="M124.279,-215.258A248.559,248.559,0,0,1,124.279,215.258L108.48,187.893A216.96,216.96,0,0,0,108.48,-187.893Z"
+        data-arc="[object Object]"
+      />
+      <path
+        class="seat vacant"
+        d="M-124.279,215.258A248.559,248.559,0,0,1,-124.279,-215.258L-108.48,-187.893A216.96,216.96,0,0,0,-108.48,187.893Z"
+        data-arc="[object Object]"
+      />
+      <path
+        class="count NoneC candidate_2"
+        d="M0,-181.926A181.926,181.926,0,0,1,180.675,-21.306L134.667,-15.88A135.6,135.6,0,0,0,0,-135.6Z"
+        data-candidate-id="2"
+      />
+      <path
+        class="count NoneB candidate_1"
+        d="M180.675,-21.306A181.926,181.926,0,0,1,73.039,166.621L54.44,124.192A135.6,135.6,0,0,0,134.667,-15.88Z"
+        data-candidate-id="1"
+      />
+      <path
+        class="count NoneE candidate_4"
+        d="M73.039,166.621A181.926,181.926,0,0,1,-104.765,148.733L-78.088,110.859A135.6,135.6,0,0,0,54.44,124.192Z"
+        data-candidate-id="4"
+      />
+      <path
+        class="count NoneA candidate_0"
+        d="M-104.765,148.733A181.926,181.926,0,0,1,-167.3,-71.469L-124.698,-53.27A135.6,135.6,0,0,0,-78.088,110.859Z"
+        data-candidate-id="0"
+      />
+      <path
+        class="count NoneD candidate_3"
+        d="M-167.3,-71.469A181.926,181.926,0,0,1,0,-181.926L0,-135.6A135.6,135.6,0,0,0,-124.698,-53.27Z"
+        data-candidate-id="3"
+      />
+      <polyline
+        class="count label candidate_2"
+        points="105.48425706032606,-118.65428596750814,129.5574299274993,-145.73306736228326,271.2,-145.73306736228326"
+      />
+      <polyline
+        class="count label candidate_1"
+        points="137.76642795913224,78.90614293836303,156.79275376539266,89.80352923124133,271.2,89.80352923124133"
+      />
+      <polyline
+        class="count label candidate_4"
+        points="-15.892326943245287,157.96582545081438,-25.542731542421244,253.88847629277274,-271.2,253.88847629277274"
+      />
+      <polyline
+        class="count label candidate_0"
+        points="-152.72410216882747,43.37184204934923,-168.22229958577628,47.77314715359844,-271.2,47.77314715359844"
+      />
+      <polyline
+        class="count label candidate_3"
+        points="-87.47496678684547,-132.4911251807774,-112.53792676209359,-170.45192573269907,-271.2,-170.45192573269907"
+      />
+      <text
+        class="count label candidate_2"
+        style="text-anchor: start;"
+        transform="translate(271.2,-145.73306736228326)"
+      >
+        Bill Gates
+      </text>
+      <text
+        class="count label candidate_1"
+        style="text-anchor: start;"
+        transform="translate(271.2,89.80352923124133)"
+      >
+        Elon Musk
+      </text>
+      <text
+        class="count label candidate_4"
+        style="text-anchor: end;"
+        transform="translate(-271.2,253.88847629277274)"
+      >
+        Richard Branson
+      </text>
+      <text
+        class="count label candidate_0"
+        style="text-anchor: end;"
+        transform="translate(-271.2,47.77314715359844)"
+      >
+        Steve Jobs
+      </text>
+      <text
+        class="count label candidate_3"
+        style="text-anchor: end;"
+        transform="translate(-271.2,-170.45192573269907)"
+      >
+        Warren Buffet
+      </text>
+    </g>
+  </svg>,
+  "length": 1,
+  "prevObject": jQuery {
+    "0": <div
+      id="showPrefVoteViz"
+    >
+      <div
+        class="donutAnimation"
+        id="donutAnimation"
+      >
+        <svg
+          height="678"
+          width="1000"
+        >
+          <g
+            transform="translate(500,339)"
+          >
+            <path
+              class="seat vacant"
+              d="M124.279,-215.258A248.559,248.559,0,0,1,124.279,215.258L108.48,187.893A216.96,216.96,0,0,0,108.48,-187.893Z"
+              data-arc="[object Object]"
+            />
+            <path
+              class="seat vacant"
+              d="M-124.279,215.258A248.559,248.559,0,0,1,-124.279,-215.258L-108.48,-187.893A216.96,216.96,0,0,0,-108.48,187.893Z"
+              data-arc="[object Object]"
+            />
+            <path
+              class="count NoneC candidate_2"
+              d="M0,-181.926A181.926,181.926,0,0,1,180.675,-21.306L134.667,-15.88A135.6,135.6,0,0,0,0,-135.6Z"
+              data-candidate-id="2"
+            />
+            <path
+              class="count NoneB candidate_1"
+              d="M180.675,-21.306A181.926,181.926,0,0,1,73.039,166.621L54.44,124.192A135.6,135.6,0,0,0,134.667,-15.88Z"
+              data-candidate-id="1"
+            />
+            <path
+              class="count NoneE candidate_4"
+              d="M73.039,166.621A181.926,181.926,0,0,1,-104.765,148.733L-78.088,110.859A135.6,135.6,0,0,0,54.44,124.192Z"
+              data-candidate-id="4"
+            />
+            <path
+              class="count NoneA candidate_0"
+              d="M-104.765,148.733A181.926,181.926,0,0,1,-167.3,-71.469L-124.698,-53.27A135.6,135.6,0,0,0,-78.088,110.859Z"
+              data-candidate-id="0"
+            />
+            <path
+              class="count NoneD candidate_3"
+              d="M-167.3,-71.469A181.926,181.926,0,0,1,0,-181.926L0,-135.6A135.6,135.6,0,0,0,-124.698,-53.27Z"
+              data-candidate-id="3"
+            />
+            <polyline
+              class="count label candidate_2"
+              points="105.48425706032606,-118.65428596750814,129.5574299274993,-145.73306736228326,271.2,-145.73306736228326"
+            />
+            <polyline
+              class="count label candidate_1"
+              points="137.76642795913224,78.90614293836303,156.79275376539266,89.80352923124133,271.2,89.80352923124133"
+            />
+            <polyline
+              class="count label candidate_4"
+              points="-15.892326943245287,157.96582545081438,-25.542731542421244,253.88847629277274,-271.2,253.88847629277274"
+            />
+            <polyline
+              class="count label candidate_0"
+              points="-152.72410216882747,43.37184204934923,-168.22229958577628,47.77314715359844,-271.2,47.77314715359844"
+            />
+            <polyline
+              class="count label candidate_3"
+              points="-87.47496678684547,-132.4911251807774,-112.53792676209359,-170.45192573269907,-271.2,-170.45192573269907"
+            />
+            <text
+              class="count label candidate_2"
+              style="text-anchor: start;"
+              transform="translate(271.2,-145.73306736228326)"
+            >
+              Bill Gates
+            </text>
+            <text
+              class="count label candidate_1"
+              style="text-anchor: start;"
+              transform="translate(271.2,89.80352923124133)"
+            >
+              Elon Musk
+            </text>
+            <text
+              class="count label candidate_4"
+              style="text-anchor: end;"
+              transform="translate(-271.2,253.88847629277274)"
+            >
+              Richard Branson
+            </text>
+            <text
+              class="count label candidate_0"
+              style="text-anchor: end;"
+              transform="translate(-271.2,47.77314715359844)"
+            >
+              Steve Jobs
+            </text>
+            <text
+              class="count label candidate_3"
+              style="text-anchor: end;"
+              transform="translate(-271.2,-170.45192573269907)"
+            >
+              Warren Buffet
+            </text>
+          </g>
+        </svg>
+      </div>
+      <div
+        class="controls at-start"
+        id="controls"
+      >
+        <a
+          class="again fa fa-step-backward"
+        />
+        <a
+          class="pause-replay fa fa-play"
+        />
+        <a
+          class="step fa fa-step-forward"
+        />
+      </div>
+      <div
+        class="stageNumbers"
+      >
+        <div
+          class="stageNumber completed"
+          data-stagenumber="0"
+        >
+          <p>
+            1
+          </p>
+        </div>
+        <div
+          class="stageNumber"
+          data-stagenumber="1"
+        >
+          <p>
+            2
+          </p>
+        </div>
+        <div
+          class="stageNumber"
+          data-stagenumber="2"
+        >
+          <p>
+            3
+          </p>
+        </div>
+        <div
+          class="stageNumber"
+          data-stagenumber="3"
+        >
+          <p>
+            4
+          </p>
+        </div>
+        <div
+          class="stageNumber"
+          data-stagenumber="4"
+        >
+          <p>
+            5
+          </p>
+        </div>
+      </div>
+      <div
+        class="quota"
+      />
+    </div>,
+    "length": 1,
+    "prevObject": jQuery {
+      "0": Document {
+        "location": Location {
+          "assign": [Function],
+          "hash": "",
+          "host": "example.org",
+          "hostname": "example.org",
+          "href": "https://example.org/",
+          "origin": "https://example.org",
+          "pathname": "/",
+          "port": "",
+          "protocol": "https:",
+          "reload": [Function],
+          "replace": [Function],
+          "search": "",
+          "toString": [Function],
+        },
+      },
+      "length": 1,
+    },
+  },
+}
+`;

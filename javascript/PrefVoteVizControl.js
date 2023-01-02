@@ -20,18 +20,21 @@ function PrefVoteVizControl ( options, $target ) {
 	this.animationTimeoutIDs = [];
 	this.viewClass = "PrefVoteVizBaseView";
 	this.$target = $target || $('#showPrefVoteViz');
-	this.imageDir = false;
 	this.countNumber = 0; //was 1. Why?
 	let source = false;
 	let data = false;
+    let viewOptions = {};
 
 	for ( var optionName in options ) {
 		switch(optionName) {
 			case 'running':
 			case 'viewClass':
-			case 'imageDir':
 				this[optionName] = options[optionName];
 				break;
+			case 'imageDir':
+            case 'tick':
+                viewOptions[optionName] = options[optionName];
+                break;
 			case 'data':
 				data = options[optionName];
 				break;
@@ -49,19 +52,20 @@ function PrefVoteVizControl ( options, $target ) {
 			data = this._loadData(source);
 		}
 		this._setupData( data );
-		
+        
 		let thisViewClass = window[ this.viewClass ];
+        let gottenData = this._getData();
 		this.view = new thisViewClass ( 
-			this._getData(), 
-			{ 'imageDir' : this.imageDir },
+			gottenData, 
+            viewOptions,
 			this.$target
 		);
 		
 		this._setupHTML();
 
 		// Fill control HTML
-		$("#quota").text("Turnout: " + Number.prototype.toLocaleString(parseInt(this.constituency.turnout)) + " Quota: " + this.constituency.quota);
-		$("#seats-span").text(this.constituency.seats);
+		this.$target.find("#quota").text("Turnout: " + Number.prototype.toLocaleString(parseInt(this.constituency.turnout)) + " Quota: " + this.constituency.quota);
+		this.$target.find("#seats-span").text(this.constituency.seats);
 
 		/* Failure should include:
 			//if we didn't load a constituency var then we have no data yet
@@ -71,8 +75,9 @@ function PrefVoteVizControl ( options, $target ) {
 
 		// And then setup targets
 		this._setupHandlers();
-		
+        
 		this.view.show();
+        
 		if ( this.running ) {
 			this.$target.find(".pause-replay").click();
 		}
@@ -134,11 +139,11 @@ PrefVoteVizControl.prototype._loadData = function(sourceURL) {
 
 PrefVoteVizControl.prototype._setupData = function( data ) {
 	// legacy formats
-	this.constituency = {
-		quota : parseInt(data.constituency.Quota || data.constituency.quota ),
-		seats : parseInt(data.constituency.seats || data.constituency.Number_Of_Seats ),
-		turnout :  data.constituency.turnout || data.constituency.Total_Poll
-	};
+    this.constituency = {
+        quota : parseInt( ('Quota' in data.constituency) ? data.constituency.Quota : data.constituency.quota ),
+        seats : parseInt( ('seats' in data.constituency) ? data.constituency.seats : data.constituency.Number_Of_Seats ),
+        turnout :  ('turnout' in data.constituency) ? data.constituency.turnout : data.constituency.Total_Poll
+    };
 	// Electorate size, and hence turnout, not supported
 
 	
@@ -317,7 +322,7 @@ PrefVoteVizControl.prototype._updateCounter = function() {
 PrefVoteVizControl.prototype._setActiveMarker = function () {
 	// It's always the *next* stage that's being animated
 	// let that = this; //unused
-	let $nextStepMarker = $(".stageNumber").removeClass("active").eq(this.countNumber +1);
+	let $nextStepMarker = this.$target.find(".stageNumber").removeClass("active").eq(this.countNumber +1);
 	$nextStepMarker.addClass('active');
 	// As soon as a step is active, you're not at the start and can go backwards
 	// (Partially because the first step is never active.)
@@ -360,6 +365,7 @@ PrefVoteVizControl.prototype._setupHandlers = function () {
 		that.jumpToStep(i);
 	})
 
+    // TODO make optional, depending on whether anything else on the page needs a key capture
 	$('body').keypress(function(event) {
 		event.preventDefault();
 		that.step();
@@ -370,21 +376,23 @@ PrefVoteVizControl.prototype._setupHandlers = function () {
 
 // firstCount folded into construction & _setStageNumber1
 
-PrefVoteVizControl.prototype._advanceCount = function() {
+PrefVoteVizControl.prototype._advanceCount = async function() {
 	// Do we have a step to which to advance?
 	if ( this.countNumber+1  in this.countDict ) {
 		//update the counters
 		this._updateCounter();
 		this._setActiveMarker();
-		this.view.animateTransfer( this.countNumber +1); //Transfer to next stage?
+		let animationPromise = this.view.animateTransfer( this.countNumber +1); //Transfer to next stage?
 		this.countNumber ++; //wise when ending?
+        return animationPromise;
 	} else {
 		// called when the loop hits the end
 		this._pause(); //I think this should do everything
+        return true;
 	}
 }
 
-PrefVoteVizControl.prototype._playStep = function() {
+PrefVoteVizControl.prototype._playStep = async function() {
 	if( this.countNumber in this.countDict ) {
 		// stop any currently running animations
 		//$(this.$target).stop(true,true) <- should go to bar chart resetForStep
@@ -392,8 +400,9 @@ PrefVoteVizControl.prototype._playStep = function() {
 		this._resetAnimations();
 		// If it goes back to the first step, there's nothing to play
 		this.view.showStep( this.countNumber);
-		this._advanceCount();
+		return this._advanceCount();
 	} else {
+        return false; // will be turned into promise automatically
 		// should not get here; set a breakpoint
 	}
 }
@@ -449,9 +458,10 @@ PrefVoteVizControl.prototype._pause = function() {
 }
 
 // advance count & resume autoplay
-PrefVoteVizControl.prototype._resume = function() {
-	this._advanceCount();
+PrefVoteVizControl.prototype._resume = async function() {
+	let animationPromise = this._advanceCount();
 	this._startLoop();
+    return animationPromise;
 }
 
 // reset & start autoplay
@@ -477,9 +487,9 @@ PrefVoteVizControl.prototype.jumpToStep = function(stepIndex) {
 
 
 // stop; play; start
-PrefVoteVizControl.prototype.step = function() {
+PrefVoteVizControl.prototype.step = async function() {
 	this._pause();
-	this._playStep();
+	return this._playStep();
 }
 
 // go backwards; restat loop if exists
@@ -503,3 +513,8 @@ PrefVoteVizControl.prototype.again = function() {
 /* Minor outstanding issues:
  * - sometimes, after ending paused, the play icon doesn't change to the repeat icon
  */
+
+//So can be loaded as CommonJS for testing
+if ( typeof(module) === 'object' ) {
+    module.exports = PrefVoteVizControl ;
+}

@@ -1,0 +1,249 @@
+{
+    "status": "success",
+    "data": {
+        "candidatesDict": [
+            {
+                "id": "0",
+                "name": "Steve Jobs",
+                "status": "Elected",
+                "party": "NoneA"
+            },
+            {
+                "id": "1",
+                "name": "Elon Musk",
+                "status": "",
+                "party": "NoneB"
+            },
+            {
+                "id": "2",
+                "name": "Bill Gates",
+                "status": "Elected",
+                "party": "NoneC"
+            },
+            {
+                "id": "3",
+                "name": "Warren Buffet",
+                "status": "",
+                "party": "NoneD"
+            },
+            {
+                "id": "4",
+                "name": "Richard Branson",
+                "status": "",
+                "party": "NoneE"
+            }
+        ],
+        "countDict": [
+            [
+                {
+                    "total": 2823,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 2645,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 3015,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 2421,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 2130,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                }
+            ],
+            [
+                {
+                    "total": 3370,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 3067,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 3473,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 2934,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 0,
+                    "status": "Excluded",
+                    "order": 0,
+                    "transfers": true
+                }
+            ],
+            [
+                {
+                    "total": 4167,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 3738,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 4539,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 0,
+                    "status": "Excluded",
+                    "order": 0,
+                    "transfers": true
+                },
+                {
+                    "total": 0,
+                    "status": "Excluded",
+                    "order": 0,
+                    "transfers": false
+                }
+            ],
+            [
+                {
+                    "total": 4253.07836,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 3803.77686,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 4345,
+                    "status": "Elected",
+                    "order": 0,
+                    "transfers": true
+                },
+                {
+                    "total": 0,
+                    "status": "Excluded",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 0,
+                    "status": "Excluded",
+                    "order": 0,
+                    "transfers": false
+                }
+            ],
+            [
+                {
+                    "total": 7005.36636,
+                    "status": "",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 0,
+                    "status": "Excluded",
+                    "order": 0,
+                    "transfers": true
+                },
+                {
+                    "total": 4345,
+                    "status": "Elected",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 0,
+                    "status": "Excluded",
+                    "order": 0,
+                    "transfers": false
+                },
+                {
+                    "total": 0,
+                    "status": "Excluded",
+                    "order": 0,
+                    "transfers": false
+                }
+            ]
+        ],
+        "countMsg": [
+            "First Candidates Preferences",
+            "Stage 2 Exclusion of Richard Branson",
+            "Stage 3 Exclusion of Warren Buffet",
+            "Stage 4 Surplus of Bill Gates",
+            "Stage 5 Exclusion of Elon Musk"
+        ],
+        "transferDict": [
+            [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            [
+                "+547.00000",
+                "+422.00000",
+                "+458.00000",
+                "+513.00000",
+                "-2130.00000"
+            ],
+            [
+                "+797.00000",
+                "+671.00000",
+                "+1066.00000",
+                "-2934.00000",
+                0
+            ],
+            [
+                "+86.07836",
+                "+65.77686",
+                "-194.00000",
+                0,
+                0
+            ],
+            [
+                "+2752.28800",
+                "-3803.77686",
+                0,
+                0,
+                0
+            ]
+        ],
+        "constituency": {
+            "seats": 2,
+            "turnout": 13034,
+            "counts": 5,
+            "quota": 4344.666666666667
+        }
+    }
+}
